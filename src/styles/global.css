@@ -742,6 +742,18 @@ button {
   height: auto;
 }
 
+/* モバイルでは地図の文字が読めるよう横スクロールを許可 */
+@media (max-width: 768px) {
+  .map-canvas {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .map-canvas svg {
+    min-width: 640px;
+  }
+}
+
 .map-lot {
   cursor: pointer;
 }
@@ -1318,9 +1330,17 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
-   Responsive — 320 / 375 / 414 / 768
+   Responsive — 320 / 375 / 414 / 768 / 1024
    --------------------------------------------------------------------------- */
 
+/* タブレット以下 */
+@media (max-width: 1024px) {
+  .map-wrap {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+
+/* 中画面（大きなスマホ・小さなタブレット） */
 @media (max-width: 768px) {
   .header-inner {
     flex-direction: column;
@@ -1330,6 +1350,16 @@ button {
 
   .brand {
     flex-direction: column;
+  }
+
+  .site-nav {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .site-nav a {
+    padding: 4px 10px;
+    font-size: var(--text-xs);
   }
 
   .map-wrap {
@@ -1343,6 +1373,14 @@ button {
   .cafe-hero {
     flex-direction: column;
     text-align: center;
+  }
+
+  .cafe-hero-img {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    margin: 0 auto;
   }
 
   .mayor-body {
@@ -1374,5 +1412,209 @@ button {
 
   .hero-name {
     font-size: var(--text-display-s);
+  }
+
+  /* 余白を縮小（モバイルでは 7rem は大きすぎる） */
+  .site-main {
+    --section-gap: 4rem;
+    padding-top: var(--space-lg);
+  }
+
+  .text-fold {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .hero-stats {
+    gap: var(--space-xl);
+    padding: var(--space-lg) var(--page-gutter);
+  }
+
+  .photo-marquee {
+    margin-top: var(--space-xl);
+  }
+
+  /* モーダルは画面いっぱい近くに */
+  .modal-overlay {
+    padding: var(--space-sm);
+  }
+
+  .modal {
+    padding: var(--space-lg);
+  }
+
+  .cafe-catch {
+    font-size: var(--text-lg);
+  }
+
+  .lot-card-title {
+    flex-wrap: wrap;
+  }
+}
+
+/* 小さなスマホ（iPhone SE など） */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+
+  .site-main {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .hero {
+    min-height: 420px;
+    height: 72vh;
+    margin-left: calc(-1 * var(--space-md));
+    margin-right: calc(-1 * var(--space-md));
+  }
+
+  .hero-content {
+    left: var(--space-md);
+    right: var(--space-md);
+  }
+
+  .hero-kana {
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+    font-size: var(--text-xs);
+  }
+
+  .hero-name {
+    font-size: clamp(1.6rem, 8vw, 2.2rem);
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+  }
+
+  .hero-motto {
+    font-size: var(--text-md);
+    letter-spacing: 0.25em;
+    text-indent: 0.25em;
+  }
+
+  .hero-stats {
+    gap: var(--space-lg);
+  }
+
+  .hero-stat-value {
+    font-size: var(--text-xl);
+  }
+
+  /* ナビは1行で収める（5項目） */
+  .site-nav {
+    gap: 0;
+  }
+
+  .site-nav a {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+  }
+
+  .page-title {
+    font-size: var(--text-xl);
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .photo-card .photo-caption {
+    font-size: 0.65rem;
+    padding: var(--space-2xs) var(--space-xs);
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-item {
+    border-right: 0;
+  }
+
+  .facility-grid,
+  .area-grid,
+  .lot-grid,
+  .resident-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-list > div,
+  .modal-list > div,
+  .lot-detail-list > div {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .info-list dt,
+  .modal-list dt,
+  .lot-detail-list dt {
+    min-width: 0;
+  }
+
+  .registry-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+  }
+
+  .registry-row-meta {
+    text-align: left;
+  }
+
+  .registry-row-arrow {
+    display: none;
+  }
+
+  .lot-card {
+    flex-direction: column;
+  }
+
+  .lot-swatch {
+    width: 100%;
+    height: 12px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: var(--text-xs);
+  }
+
+  .mayor-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mayor-cta .btn {
+    text-align: center;
+  }
+
+  .photo-marquee-item {
+    width: 140px;
+  }
+
+  .photo-marquee-item .photo-placeholder {
+    height: 105px;
+  }
+}
+
+/* 超小さい画面（320px） */
+@media (max-width: 360px) {
+  .site-nav a {
+    font-size: 0.65rem;
+    padding: 3px 4px;
+  }
+
+  .brand-name {
+    font-size: var(--text-xl);
+  }
+
+  .cafe-hero-img {
+    max-width: 260px;
+  }
+
+  .photo-grid {
+    grid-template-columns: 1fr;
   }
 }
