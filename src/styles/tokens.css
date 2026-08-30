@@ -1,0 +1,102 @@
+/* Hallmark · macrostructure: Photographic · tone: wabi-sabi editorial · anchor hue: neutral ink
+ * theme: studied-DNA (source: nasu-ougiya / casastella / motosue / shuku-kokon — Japanese heritage sites)
+ * paper: warm grey-beige (greige) · accent: shiba-brown used as a small mark only
+ * display: Zen Old Mincho (和文明朝) · body: Zen Kaku Gothic New (和文ゴシック) · label: Crimson Pro (欧文セリフ)
+ */
+:root {
+  /* Paper band — warm greige, like shuku-kokon's #e1ded8 and motosue's unbleached ground */
+  --color-paper: oklch(92% 0.012 85);
+  --color-paper-2: oklch(89% 0.014 85);
+  --color-paper-3: oklch(85% 0.016 82);
+  --color-rule: oklch(78% 0.014 80);
+  --color-rule-2: oklch(55% 0.012 70);
+  --color-muted: oklch(48% 0.012 70);
+  --color-neutral: oklch(36% 0.012 65);
+  --color-ink-2: oklch(28% 0.014 60);
+  --color-ink: oklch(20% 0.016 55);
+
+  /* Accent — shiba brown, used sparingly (small marks only, ≤5% footprint) */
+  --color-accent: oklch(42% 0.06 50);
+  --color-accent-2: oklch(52% 0.05 60);
+  --color-accent-ink: oklch(94% 0.02 85);
+  --color-focus: oklch(42% 0.06 50);
+
+  /* Semantic — desaturated to match the monochrome base */
+  --color-sold: oklch(82% 0.03 70);
+  --color-available: oklch(88% 0.02 95);
+  --color-danger: oklch(48% 0.08 30);
+
+  /* Type — Japanese heritage pairing */
+  --font-display: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho',
+    ui-serif, Georgia, serif;
+  --font-body: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN',
+    'Yu Gothic', ui-sans-serif, system-ui, sans-serif;
+  --font-label: 'Crimson Pro', 'Times New Roman', ui-serif, Georgia, serif;
+  --font-mono: 'Courier New', ui-monospace, monospace;
+
+  --display-weight: 600;
+  --display-style: normal;
+
+  /* Type scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+  --text-display: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+  --text-display-s: clamp(1.75rem, 3vw + 1rem, 2.75rem);
+
+  /* Line-height */
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-normal: 1.9;
+  --lh-relaxed: 2.05;
+
+  /* Tracking */
+  --tracking-display: 0.06em;
+  --tracking-label: 0.18em;
+
+  /* Space — generous, Japanese ryokan pacing */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 7rem;
+  --section-gap: 7rem;
+  --section-head-gap: 2rem;
+
+  /* Layout */
+  --page-max: 76rem;
+  --page-gutter: clamp(1.25rem, 5vw, 3.5rem);
+  --measure: 60ch;
+
+  /* Rules & radius — editorial stays square */
+  --rule-hair: 0.5px;
+  --rule-fine: 1px;
+  --radius-card: 0;
+  --radius-pill: 0;
+  --rule-card: 1px;
+  --shadow-card: none;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  /* Z-index */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sticky-nav: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
