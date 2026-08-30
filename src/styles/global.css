@@ -340,7 +340,9 @@ button {
   height: min(88vh, 760px);
   min-height: 480px;
   overflow: hidden;
-  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--page-gutter))
+  /* サイトメインの max-width を超えてビューポート全幅に広げる */
+  width: 100vw;
+  margin: calc(-1 * var(--space-xl)) calc(50% - 50vw)
     var(--space-2xl);
 }
 
@@ -667,7 +669,8 @@ button {
 /* Photo marquee — quiet infinite roll, like CASA stella's photoroll */
 .photo-marquee {
   overflow: hidden;
-  margin: var(--space-2xl) calc(-1 * var(--page-gutter));
+  width: 100vw;
+  margin: var(--space-2xl) calc(50% - 50vw);
   padding: var(--space-md) 0;
   border-top: var(--rule-hair) solid var(--color-rule);
   border-bottom: var(--rule-hair) solid var(--color-rule);
@@ -1465,8 +1468,6 @@ button {
   .hero {
     min-height: 420px;
     height: 72vh;
-    margin-left: calc(-1 * var(--space-md));
-    margin-right: calc(-1 * var(--space-md));
   }
 
   .hero-content {
