@@ -124,17 +124,34 @@ export default function CafePage() {
           </div>
           <div>
             <dt>Instagram</dt>
-            <dd>@cafe_shibanoya（フォロワー {town.regulars.toLocaleString()}人）</dd>
+            <dd>
+              <a href={town.instagramUrl} target="_blank" rel="noreferrer">
+                {town.instagramHandle}
+              </a>
+              （フォロワー {town.followerLabel}）
+            </dd>
           </div>
           <div>
             <dt>隣の店</dt>
-            <dd>しばの商店（オンラインショップ：shibano.base.shop）</dd>
+            <dd>
+              {town.shopName}（オンラインショップ：
+              <a href={town.shopUrl} target="_blank" rel="noreferrer">
+                {town.shopUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </a>
+              ）
+            </dd>
           </div>
         </dl>
+        <p className="cafe-story-sub">
+          ※ 営業時間・所在地などの店舗情報は、物語上の設定です。
+        </p>
         <div className="cafe-links">
           <Link className="btn" to="/map">
             地図で見る
           </Link>
+          <a className="btn btn-secondary" href={town.instagramUrl} target="_blank" rel="noreferrer">
+            Instagram で見る
+          </a>
           <Link className="btn btn-secondary" to="/">
             ホームへ戻る
           </Link>

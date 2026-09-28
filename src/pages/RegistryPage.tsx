@@ -1,66 +1,124 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
-import type { Lot, RegistryEntry } from '../data/types'
+import { lotLabel } from '../data/types'
+import type { District, Lot, RegistryEntry, Resident } from '../data/types'
 
-/** 区画＋住人から登記簿1件を組み立てる */
+/** 期に応じた登記原因 */
+function reasonFor(phase: number): string {
+  if (phase === 1) return '贈与（常連様1,000名突破記念 別荘地プレゼント企画）'
+  if (phase === 2) return '贈与（常連様2,000名突破記念 公開抽選会）'
+  return '売買'
+}
+
+/** 区画＋住人＋地区から登記簿1件を組み立てる */
 function buildEntry(
   lot: Lot,
-  residentById: Record<string, { name: string; handle: string; certificateNo: string }>,
+  district: District | undefined,
+  owner: Resident | undefined,
+  townName: string,
 ): RegistryEntry | null {
-  if (lot.status !== 'sold' || !lot.ownerId) return null
-  const owner = residentById[lot.ownerId]
-  if (!owner) return null
+  if (lot.status !== 'sold' || !lot.ownerId || !owner) return null
+  const label = lotLabel(district, lot)
+  const districtName = district?.name ?? '柴ノ別荘地'
+  const published = owner.publish
   return {
     lotId: lot.id,
+    districtId: lot.districtId,
+    districtName,
     lotNumber: lot.number,
-    lotName: `第${lot.number}区画`,
+    lotName: `${label}区画`,
+    phase: lot.phase,
     registrationNo: `柴ノ町 第${String(lot.number).padStart(4, '0')}号`,
     landType: '宅地',
     area: lot.area,
-    address: `柴ノ県柴ノ町 別荘地 ${lot.id.toUpperCase()}`,
-    ownerName: owner.name,
-    ownerHandle: owner.handle,
-    ownerAddress: `柴ノ県柴ノ町 別荘地 ${lot.number}番`,
-    reason: '贈与（常連様1,000名突破記念 別荘地プレゼント企画）',
-    registeredDate: lot.acquiredDate ?? '令和6年7月28日',
-    certificateNo: owner.certificateNo,
+    address: `柴ノ県${townName} ${districtName} ${label}番地`,
+    ownerName: published ? owner.name : '',
+    ownerHandle: published ? owner.handle : '',
+    ownerAddress: published ? `柴ノ県${townName} ${districtName} ${label}番地` : '',
+    reason: reasonFor(lot.phase),
+    registeredDate: lot.acquiredDate ?? '令和8年7月28日',
+    certificateNo: published ? owner.certificateNo : '',
+    published,
   }
 }
 
+const ALL = 'すべて'
+
 export default function RegistryPage() {
   const { content } = useContent()
-  const { lots, residents } = content
-  const residentById = Object.fromEntries(residents.map((r) => [r.id, r]))
-  const registryEntries = lots
-    .map((l) => buildEntry(l, residentById))
-    .filter((e): e is RegistryEntry => e !== null)
-  const lotById = Object.fromEntries(lots.map((l) => [l.id, l]))
+  const { town, lots, residents, districts } = content
+
+  const residentById = useMemo(
+    () => Object.fromEntries(residents.map((r) => [r.id, r])),
+    [residents],
+  )
+  const districtById = useMemo(
+    () => Object.fromEntries(districts.map((d) => [d.id, d])),
+    [districts],
+  )
+
+  const registryEntries = useMemo(
+    () =>
+      lots
+        .map((l) =>
+          buildEntry(l, districtById[l.districtId], l.ownerId ? residentById[l.ownerId] : undefined, town.name),
+        )
+        .filter((e): e is RegistryEntry => e !== null),
+    [lots, districtById, residentById, town.name],
+  )
 
   const [query, setQuery] = useState('')
+  const [districtFilter, setDistrictFilter] = useState<string>(ALL)
+  const [phaseFilter, setPhaseFilter] = useState<string>(ALL)
+  const [yearFilter, setYearFilter] = useState<string>(ALL)
   const [selected, setSelected] = useState<RegistryEntry | null>(null)
 
+  const phases = Array.from(new Set(registryEntries.map((e) => e.phase))).sort(
+    (a, b) => a - b,
+  )
+  const years = Array.from(
+    new Set(
+      registryEntries
+        .map((e) => e.registeredDate.match(/令和\d+年/)?.[0])
+        .filter((y): y is string => Boolean(y)),
+    ),
+  )
+  const usedDistricts = districts.filter((d) =>
+    registryEntries.some((e) => e.districtId === d.id),
+  )
+
   const q = query.trim().toLowerCase()
-  const results = q
-    ? registryEntries.filter((e) =>
-        [e.lotName, String(e.lotNumber), e.ownerName, e.ownerHandle, e.registrationNo]
-          .join(' ')
-          .toLowerCase()
-          .includes(q),
-      )
-    : registryEntries
+  const results = registryEntries.filter((e) => {
+    if (districtFilter !== ALL && e.districtId !== districtFilter) return false
+    if (phaseFilter !== ALL && String(e.phase) !== phaseFilter) return false
+    if (yearFilter !== ALL && !e.registeredDate.includes(yearFilter)) return false
+    if (!q) return true
+    return [
+      e.lotName,
+      String(e.lotNumber),
+      e.ownerName,
+      e.ownerHandle,
+      e.registrationNo,
+      e.districtName,
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(q)
+  })
 
   return (
     <div>
       <h1 className="page-title">土地登記簿の閲覧</h1>
       <p className="page-lead">
-        柴ノ別荘地に登記されている土地の、表題部・権利部（甲区）を閲覧できます。
-        区画番号・所有者名・ハンドル名で検索できます。
+        柴ノ町に登記されている土地の、表題部・権利部（甲区）を閲覧できます。
+        地区・期・分譲時期で絞り込んだり、区画番号・所有者名・ハンドル名で検索できます。
       </p>
 
-      {/* 検索 */}
+      {/* 絞り込み */}
       <div className="registry-search card">
         <label className="search-label" htmlFor="registry-query">
-          検索（区画番号・所有者名・ハンドル名）
+          キーワード検索（区画番号・所有者名・ハンドル名・登記番号）
         </label>
         <input
           id="registry-query"
@@ -70,6 +128,48 @@ export default function RegistryPage() {
           placeholder="例：柴田 もふ子 / @mofuko / 第3区画"
           className="search-input"
         />
+
+        <div className="registry-filters">
+          <label className="filter-field">
+            <span>地区・街区</span>
+            <select
+              value={districtFilter}
+              onChange={(e) => setDistrictFilter(e.target.value)}
+            >
+              <option value={ALL}>{ALL}</option>
+              {usedDistricts.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="filter-field">
+            <span>期</span>
+            <select value={phaseFilter} onChange={(e) => setPhaseFilter(e.target.value)}>
+              <option value={ALL}>{ALL}</option>
+              {phases.map((p) => (
+                <option key={p} value={String(p)}>
+                  第{p}期
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="filter-field">
+            <span>分譲時期</span>
+            <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
+              <option value={ALL}>{ALL}</option>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <p className="search-count">{results.length} 件の登記を表示中</p>
       </div>
 
@@ -78,13 +178,11 @@ export default function RegistryPage() {
         {results.length === 0 ? (
           <div className="card registry-empty">
             <p>該当する登記が見つかりませんでした。</p>
-            <p className="registry-empty-sub">
-              別のキーワードでお試しください。
-            </p>
+            <p className="registry-empty-sub">条件を変えてお試しください。</p>
           </div>
         ) : (
           results.map((e) => {
-            const lot = lotById[e.lotId]
+            const lot = lots.find((l) => l.id === e.lotId)
             return (
               <button
                 key={e.lotId}
@@ -94,17 +192,23 @@ export default function RegistryPage() {
               >
                 <div className="registry-row-main">
                   <p className="registry-row-title">{e.lotName}</p>
-                  <p className="registry-row-sub">{e.registrationNo}</p>
+                  <p className="registry-row-sub">{e.districtName}</p>
                 </div>
                 <div className="registry-row-owner">
-                  <p className="registry-row-name">{e.ownerName}</p>
-                  <p className="registry-row-handle">{e.ownerHandle}</p>
+                  {e.published ? (
+                    <>
+                      <p className="registry-row-name">{e.ownerName}</p>
+                      <p className="registry-row-handle">{e.ownerHandle}</p>
+                    </>
+                  ) : (
+                    <p className="registry-row-name">入居者決定</p>
+                  )}
                 </div>
                 <div className="registry-row-meta">
-                  <p>{e.landType} {e.area}㎡</p>
-                  {lot && (
-                    <p className="registry-row-date">{e.registeredDate}</p>
-                  )}
+                  <p>
+                    第{e.phase}期・{e.landType} {e.area}㎡
+                  </p>
+                  {lot && <p className="registry-row-date">{e.registeredDate}</p>}
                 </div>
                 <span className="registry-row-arrow" aria-hidden="true">
                   ›
@@ -122,7 +226,7 @@ export default function RegistryPage() {
             className="modal card"
             role="dialog"
             aria-modal="true"
-            aria-label={`第${selected.lotNumber}区画 登記簿`}
+            aria-label={`${selected.lotName} 登記簿`}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -171,12 +275,16 @@ export default function RegistryPage() {
               <div>
                 <dt>所有者</dt>
                 <dd>
-                  {selected.ownerName}（{selected.ownerHandle}）
+                  {selected.published
+                    ? `${selected.ownerName}（${selected.ownerHandle}）`
+                    : '入居者決定（掲載許可待ち）'}
                 </dd>
               </div>
               <div>
                 <dt>所有者住所</dt>
-                <dd>{selected.ownerAddress}</dd>
+                <dd>
+                  {selected.published ? selected.ownerAddress : '非公開'}
+                </dd>
               </div>
               <div>
                 <dt>登記日</dt>
@@ -184,13 +292,19 @@ export default function RegistryPage() {
               </div>
               <div>
                 <dt>権利証番号</dt>
-                <dd>{selected.certificateNo}</dd>
+                <dd>{selected.published ? selected.certificateNo : '非公開'}</dd>
               </div>
             </dl>
 
             <p className="modal-note">
-              ※ 本サイトはデモのため、実際の土地登記簿とは異なります。
+              ※ 掲載内容は物語上の設定です。所有者情報は、掲載許可をいただいた方のみ表示しています。
             </p>
+
+            <div className="page-actions">
+              <Link className="btn btn-secondary" to={`/map/${selected.districtId}`}>
+                この地区の地図を見る
+              </Link>
+            </div>
           </div>
         </div>
       )}

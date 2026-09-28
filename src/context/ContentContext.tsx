@@ -19,6 +19,7 @@ import type { SiteContent } from '../data/content'
 import { buildDefaultContent } from '../data/defaultContent'
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import type { ImageMap } from '../lib/image'
+import { normalizeContent } from '../lib/normalize'
 
 const CONTENT_DOC = 'content/site'
 
@@ -58,7 +59,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       doc(db, CONTENT_DOC),
       (snap) => {
         if (snap.exists()) {
-          setContent(snap.data() as SiteContent)
+          setContent(normalizeContent(snap.data() as Partial<SiteContent>))
           setIsLive(true)
         } else {
           // まだ保存されていない → デフォルト

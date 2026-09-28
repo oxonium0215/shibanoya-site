@@ -5,6 +5,7 @@ import MapPage from './pages/MapPage'
 import CafePage from './pages/CafePage'
 import LotsPage from './pages/LotsPage'
 import RegistryPage from './pages/RegistryPage'
+import NewsPage from './pages/NewsPage'
 import AdminPage from './pages/admin/AdminPage'
 
 export default function App() {
@@ -13,9 +14,12 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />
+        <Route path="/map/:districtId" element={<MapPage />} />
         <Route path="/cafe" element={<CafePage />} />
         <Route path="/lots" element={<LotsPage />} />
+        <Route path="/lots/:districtId" element={<LotsPage />} />
         <Route path="/registry" element={<RegistryPage />} />
+        <Route path="/news" element={<NewsPage />} />
         <Route path="*" element={<HomePage />} />
       </Route>
       {/* 管理画面（レイアウトなし・専用スタイル） */}

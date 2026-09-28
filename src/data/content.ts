@@ -1,4 +1,4 @@
-import type { Facility, Lot, NewsItem, Resident } from './types'
+import type { District, Facility, Lot, NewsItem, Resident } from './types'
 
 /** カフェのメニュー1品 */
 export interface CafeMenuItem {
@@ -7,24 +7,44 @@ export interface CafeMenuItem {
   desc: string
 }
 
-/** サイト全体の編集可能なコンテンツ（data/content.json に保存） */
+/** 店長・事務長のプロフィール */
+export interface ManagerProfile {
+  name: string
+  color: string
+  role: string
+  /** トップページに表示する短い紹介文 */
+  bio: string
+}
+
+/** サイト全体の編集可能なコンテンツ（Firestore に保存） */
 export interface SiteContent {
   town: {
     name: string
     kana: string
     motto: string
-    regulars: number
+    /** 常連様（フォロワー）の表記。固定の人数は使わず「3,000人以上」など */
+    followerLabel: string
     area: string
     established: string
+    /** Instagram のハンドル（@cafe_shibanoya） */
+    instagramHandle: string
+    /** Instagram の URL */
+    instagramUrl: string
+    /** オンラインショップの名前（しばの商店） */
+    shopName: string
+    /** オンラインショップの URL */
+    shopUrl: string
     mayor: {
       name: string
       title: string
       occupation: string
       greeting: string
     }
-    cafeManager: { name: string; color: string; role: string }
-    officeManager: { name: string; color: string; role: string }
+    cafeManager: ManagerProfile
+    officeManager: ManagerProfile
   }
+  /** 地区・街区 */
+  districts: District[]
   facilities: Facility[]
   news: NewsItem[]
   lots: Lot[]
@@ -44,5 +64,9 @@ export interface SiteContent {
     galleryHome: string[]
     /** カフェのギャラリー（6枚。空はプレースホルダー表示） */
     galleryCafe: string[]
+    /** 赤柴店長の写真 */
+    managerRed: string
+    /** 白柴事務長の写真 */
+    managerWhite: string
   }
 }

@@ -12,6 +12,9 @@ dist-ssr
 .wrangler
 .firebase
 
+# 一時ファイル
+scratch
+
 # TypeScript build info
 *.tsbuildinfo
 

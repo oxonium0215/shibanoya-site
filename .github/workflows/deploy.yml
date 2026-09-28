@@ -32,7 +32,8 @@ jobs:
         run: npm run build
 
       # FIREBASE_TOKEN（firebase login:ci で発行 or refresh token）でデプロイ
-      - name: Deploy to Firebase Hosting
-        run: npx firebase deploy --only hosting --project shigbanocho-site
+      # 正しい綴りのサイト shibanocho-site.web.app へ配信（firebase.json の hosting.site）
+      - name: Deploy to Firebase
+        run: npx firebase deploy --only hosting,firestore:rules --project shigbanocho-site
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

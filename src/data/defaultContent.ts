@@ -1,5 +1,6 @@
 import type { SiteContent } from './content'
 import { town, facilities, newsItems } from './town'
+import { districts } from './districts'
 import { lots } from './lots'
 import { residents } from './residents'
 
@@ -10,9 +11,13 @@ export function buildDefaultContent(): SiteContent {
       name: town.name,
       kana: town.kana,
       motto: town.motto,
-      regulars: town.regulars,
+      followerLabel: town.followerLabel,
       area: town.area,
       established: town.established,
+      instagramHandle: town.instagramHandle,
+      instagramUrl: town.instagramUrl,
+      shopName: town.shopName,
+      shopUrl: town.shopUrl,
       mayor: {
         name: town.mayor.name,
         title: town.mayor.title,
@@ -22,6 +27,7 @@ export function buildDefaultContent(): SiteContent {
       cafeManager: { ...town.cafeManager },
       officeManager: { ...town.officeManager },
     },
+    districts: districts.map((d) => ({ ...d })),
     facilities: facilities.map((f) => ({ ...f })),
     news: newsItems.map((n) => ({ ...n })),
     lots: lots.map((l) => ({ ...l })),
@@ -66,6 +72,8 @@ export function buildDefaultContent(): SiteContent {
       cafe: '/images/sangoku-dango.jpg',
       galleryHome: ['', '', '', '', '', ''],
       galleryCafe: ['', '', '', '', '', ''],
+      managerRed: '',
+      managerWhite: '',
     },
   }
 }

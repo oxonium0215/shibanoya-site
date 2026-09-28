@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { town } from '../data/town'
+import { useContent } from '../context/ContentContext'
 import { ShibaIcon } from './icons'
 
 const navItems = [
@@ -10,7 +10,15 @@ const navItems = [
   { to: '/registry', label: '土地登記簿' },
 ]
 
+/** 令和の年（2018年 = 平成30年 = 令和元年） */
+function reiwaYear(): string {
+  return `令和${new Date().getFullYear() - 2018}年`
+}
+
 export default function Layout() {
+  const { content } = useContent()
+  const { town } = content
+
   return (
     <div className="layout">
       <header className="site-header">
@@ -43,12 +51,16 @@ export default function Layout() {
       <footer className="site-footer">
         <p className="footer-motto">{town.motto}</p>
         <p className="footer-copy">
-          © 令和6年 {town.name}役場（デモサイト）
+          © {reiwaYear()} {town.name}役場
           <br />
           純喫茶 柴乃屋 Instagram：
-          <a href="https://www.instagram.com/cafe_shibanoya/" target="_blank" rel="noreferrer">
-            @cafe_shibanoya
+          <a href={town.instagramUrl} target="_blank" rel="noreferrer">
+            {town.instagramHandle}
           </a>
+          <br />
+          <span className="footer-fictional">
+            {town.name}は、純喫茶 柴乃屋の物語から生まれた架空の町です。
+          </span>
         </p>
       </footer>
     </div>

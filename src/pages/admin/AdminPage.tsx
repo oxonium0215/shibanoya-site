@@ -13,10 +13,11 @@ import {
 } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import type { SiteContent } from '../../data/content'
-import type { NewsItem, Facility, Lot, Resident } from '../../data/types'
+import type { District, NewsItem, Facility, Lot, Resident } from '../../data/types'
+import { NEWS_CATEGORIES } from '../../data/town'
 import './admin.css'
 
-type Tab = 'dashboard' | 'news' | 'town' | 'registry' | 'map' | 'images'
+type Tab = 'dashboard' | 'news' | 'town' | 'districts' | 'registry' | 'map' | 'images'
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -162,7 +163,8 @@ export default function AdminPage() {
             ['dashboard', 'ダッシュボード'],
             ['news', 'お知らせ'],
             ['town', 'サイト設定'],
-            ['registry', '登記簿'],
+            ['districts', '地区'],
+            ['registry', '住人・登記'],
             ['map', '地図'],
             ['images', '画像'],
           ] as [Tab, string][]
@@ -180,6 +182,7 @@ export default function AdminPage() {
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'news' && <NewsEditor draft={draft} onSave={save} />}
         {tab === 'town' && <TownEditor draft={draft} onSave={save} />}
+        {tab === 'districts' && <DistrictEditor draft={draft} onSave={save} />}
         {tab === 'registry' && <RegistryEditor draft={draft} onSave={save} />}
         {tab === 'map' && (
           <MapEditor draft={draft} onSave={save} uploadImage={uploadImage} />
@@ -197,6 +200,7 @@ function Dashboard() {
   const { content } = useContent()
   const cards: [string, string | number][] = [
     ['お知らせ', content.news.length],
+    ['地区', content.districts.length],
     ['施設', content.facilities.length],
     ['区画', content.lots.length],
     ['住人', content.residents.length],
@@ -237,7 +241,7 @@ function NewsEditor({
   const add = () => {
     setItems((prev) => [
       ...prev,
-      { date: '', category: 'お知らせ', title: '', body: '' },
+      { date: '', category: NEWS_CATEGORIES[0], title: '', body: '' },
     ])
   }
   const remove = (i: number) => {
@@ -259,7 +263,16 @@ function NewsEditor({
                 <input value={n.date} onChange={(e) => update(i, { date: e.target.value })} />
               </label>
               <label>カテゴリ
-                <input value={n.category} onChange={(e) => update(i, { category: e.target.value })} />
+                <select
+                  value={n.category}
+                  onChange={(e) => update(i, { category: e.target.value })}
+                >
+                  {Array.from(new Set([...NEWS_CATEGORIES, n.category])).map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </label>
               <button className="admin-btn admin-btn-danger" onClick={() => remove(i)}>削除</button>
             </div>
@@ -314,15 +327,34 @@ function TownEditor({
           <input value={town.motto} onChange={(e) => set({ motto: e.target.value })} />
         </label>
         <div className="admin-form-grid">
-          <label>常連様の数
+          <label>常連様の表記（フォロワー）
             <input
-              type="number"
-              value={town.regulars}
-              onChange={(e) => set({ regulars: Number(e.target.value) })}
+              value={town.followerLabel}
+              onChange={(e) => set({ followerLabel: e.target.value })}
+              placeholder="例：3,000人以上"
             />
           </label>
           <label>面積
             <input value={town.area} onChange={(e) => set({ area: e.target.value })} />
+          </label>
+        </div>
+        <div className="admin-form-grid">
+          <label>開町日
+            <input value={town.established} onChange={(e) => set({ established: e.target.value })} />
+          </label>
+          <label>Instagram ハンドル
+            <input value={town.instagramHandle} onChange={(e) => set({ instagramHandle: e.target.value })} />
+          </label>
+        </div>
+        <label>Instagram URL
+          <input value={town.instagramUrl} onChange={(e) => set({ instagramUrl: e.target.value })} />
+        </label>
+        <div className="admin-form-grid">
+          <label>オンラインショップ名
+            <input value={town.shopName} onChange={(e) => set({ shopName: e.target.value })} />
+          </label>
+          <label>ショップ URL
+            <input value={town.shopUrl} onChange={(e) => set({ shopUrl: e.target.value })} />
           </label>
         </div>
         <h3>町長</h3>
@@ -346,6 +378,9 @@ function TownEditor({
             <input value={town.cafeManager.role} onChange={(e) => setManager('cafeManager', { role: e.target.value })} />
           </label>
         </div>
+        <label>紹介文
+          <textarea value={town.cafeManager.bio} onChange={(e) => setManager('cafeManager', { bio: e.target.value })} rows={2} />
+        </label>
         <h3>事務長（白柴）</h3>
         <div className="admin-form-grid">
           <label>名前
@@ -355,6 +390,9 @@ function TownEditor({
             <input value={town.officeManager.role} onChange={(e) => setManager('officeManager', { role: e.target.value })} />
           </label>
         </div>
+        <label>紹介文
+          <textarea value={town.officeManager.bio} onChange={(e) => setManager('officeManager', { bio: e.target.value })} rows={2} />
+        </label>
         <div className="admin-save-row">
           <button className="admin-btn admin-btn-primary" onClick={() => onSave({ ...draft, town })}>
             保存
@@ -381,9 +419,32 @@ function RegistryEditor({
   const updateLot = (i: number, patch: Partial<Lot>) =>
     setLots((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)))
 
-  const save = () => onSave({ ...draft, residents, lots })
+  const addLot = (districtId: string) => {
+    const inDistrict = lots.filter((l) => l.districtId === districtId)
+    const maxNumber = inDistrict.reduce((m, l) => Math.max(m, l.number), 0)
+    const id = `lot-${Date.now().toString(36)}`
+    setLots((prev) => [
+      ...prev,
+      {
+        id,
+        districtId,
+        number: maxNumber + 1,
+        phase: 1,
+        area: 180,
+        status: 'planned',
+        note: '',
+        x: 80,
+        y: 70,
+        w: 148,
+        h: 75,
+      },
+    ])
+  }
+  const removeLot = (id: string) => {
+    setLots((prev) => prev.filter((l) => l.id !== id))
+  }
 
-  const soldLots = lots.filter((l) => l.status === 'sold')
+  const save = () => onSave({ ...draft, residents, lots })
 
   return (
     <div className="admin-section">
@@ -411,28 +472,106 @@ function RegistryEditor({
                 <input value={r.movedInDate} onChange={(e) => updateResident(i, { movedInDate: e.target.value })} />
               </label>
             </div>
+            <div className="admin-item-row">
+              <label>地区
+                <select
+                  value={r.districtId ?? ''}
+                  onChange={(e) => updateResident(i, { districtId: e.target.value })}
+                >
+                  <option value="">（未設定）</option>
+                  {draft.districts.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="admin-check">
+                <input
+                  type="checkbox"
+                  checked={r.publish}
+                  onChange={(e) => updateResident(i, { publish: e.target.checked })}
+                />
+                掲載許可（氏名・Instagram を公開する）
+              </label>
+            </div>
           </div>
         ))}
       </div>
-      <h3>完売区画の詳細</h3>
-      <div className="admin-list">
-        {soldLots.map((lot) => {
-          const i = lots.findIndex((l) => l.id === lot.id)
-          return (
-            <div key={lot.id} className="admin-item">
-              <p className="admin-item-title">第{lot.number}区画（{lot.area}㎡）</p>
-              <div className="admin-item-row">
-                <label>面積
-                  <input type="number" value={lot.area} onChange={(e) => updateLot(i, { area: Number(e.target.value) })} />
-                </label>
-                <label>特徴
-                  <input value={lot.note ?? ''} onChange={(e) => updateLot(i, { note: e.target.value })} />
-                </label>
-              </div>
+      <h3>区画の詳細（地区ごと）</h3>
+      {draft.districts.map((d) => {
+        const districtLots = lots
+          .filter((l) => l.districtId === d.id)
+          .sort((a, b) => a.number - b.number)
+        return (
+          <div key={d.id} className="admin-subsection">
+            <div className="admin-head">
+              <h4>{d.name}（{districtLots.length}区画）</h4>
+              <button className="admin-btn" onClick={() => addLot(d.id)}>
+                + 区画を追加
+              </button>
             </div>
-          )
-        })}
-      </div>
+            <div className="admin-list">
+              {districtLots.map((lot) => {
+                const i = lots.findIndex((l) => l.id === lot.id)
+                return (
+                  <div key={lot.id} className="admin-item">
+                    <div className="admin-item-row">
+                      <label>番号
+                        <input
+                          type="number"
+                          value={lot.number}
+                          onChange={(e) => updateLot(i, { number: Number(e.target.value) })}
+                        />
+                      </label>
+                      <label>期
+                        <input
+                          type="number"
+                          value={lot.phase}
+                          onChange={(e) => updateLot(i, { phase: Number(e.target.value) })}
+                        />
+                      </label>
+                      <label>状態
+                        <select
+                          value={lot.status}
+                          onChange={(e) =>
+                            updateLot(i, { status: e.target.value as Lot['status'] })
+                          }
+                        >
+                          <option value="sold">完売</option>
+                          <option value="available">入居者決定</option>
+                          <option value="planned">予定</option>
+                        </select>
+                      </label>
+                      <button
+                        className="admin-btn admin-btn-danger"
+                        onClick={() => removeLot(lot.id)}
+                      >
+                        削除
+                      </button>
+                    </div>
+                    <div className="admin-item-row">
+                      <label>面積
+                        <input
+                          type="number"
+                          value={lot.area}
+                          onChange={(e) => updateLot(i, { area: Number(e.target.value) })}
+                        />
+                      </label>
+                      <label>特徴
+                        <input
+                          value={lot.note ?? ''}
+                          onChange={(e) => updateLot(i, { note: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
       <div className="admin-save-row">
         <button className="admin-btn admin-btn-primary" onClick={save}>保存</button>
       </div>
@@ -458,9 +597,12 @@ function MapEditor({
   } | null>(draft.mapBackgroundSize ?? null)
   const [facilities, setFacilities] = useState<Facility[]>(draft.facilities)
   const [lots, setLots] = useState<Lot[]>(draft.lots)
+  const [districts, setDistricts] = useState<District[]>(draft.districts)
+  /** 'town' = 町全体図 / それ以外は地区ID */
+  const [view, setView] = useState<string>('town')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // 背景画像の寸法を取得（viewBox の縦横比に使用）
+  // 背景画像の寸法を取得（町全体図の viewBox に使用）
   const [bgSize, setBgSize] = useState<{ w: number; h: number } | null>(
     draft.mapBackgroundSize ?? null,
   )
@@ -482,10 +624,14 @@ function MapEditor({
   const vbW = bgSize?.w ?? 1000
   const vbH = bgSize?.h ?? 660
 
+  const activeDistrict = districts.find((d) => d.id === view)
+
   const updateFacility = (i: number, patch: Partial<Facility>) =>
     setFacilities((prev) => prev.map((f, idx) => (idx === i ? { ...f, ...patch } : f)))
   const updateLot = (i: number, patch: Partial<Lot>) =>
     setLots((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)))
+  const updateDistrict = (i: number, patch: Partial<District>) =>
+    setDistricts((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)))
 
   const handleUpload = async (file: File) => {
     try {
@@ -497,222 +643,342 @@ function MapEditor({
   }
 
   const save = () =>
-    onSave({ ...draft, mapBackground, mapBackgroundSize, facilities, lots })
+    onSave({
+      ...draft,
+      mapBackground,
+      mapBackgroundSize,
+      facilities,
+      lots,
+      districts,
+    })
 
   return (
     <div className="admin-section">
       <h2>地図</h2>
-      <h3>背景画像</h3>
+
+      {/* 表示する図面の切り替え */}
+      <h3>表示する図面</h3>
       <div className="admin-item">
         <div className="admin-item-row">
-          <input
-            type="text"
-            value={mapBackground}
-            onChange={(e) => setMapBackground(e.target.value)}
-            placeholder="画像URL"
-          />
-          <label className="admin-file">
-            アップロード
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) handleUpload(f)
+          <button
+            className={`admin-btn ${view === 'town' ? 'admin-btn-primary' : ''}`}
+            onClick={() => {
+              setView('town')
+              setSelectedId(null)
+            }}
+          >
+            町全体図
+          </button>
+          {districts.map((d) => (
+            <button
+              key={d.id}
+              className={`admin-btn ${view === d.id ? 'admin-btn-primary' : ''}`}
+              onClick={() => {
+                setView(d.id)
+                setSelectedId(null)
               }}
-            />
-          </label>
+            >
+              {d.shortName}
+            </button>
+          ))}
         </div>
         <p className="admin-help">
-          背景画像を設定すると、地図の縦横比が画像に合わせて変わります。未設定の場合はデフォルトの草地（1000×660）です。
+          町全体図では地区マーカーと施設、各地区では区画の位置を編集できます。
         </p>
       </div>
 
-      <h3>施設（アイコン）</h3>
-      <div className="admin-list">
-        {facilities.map((f, i) => (
-          <div key={f.id} className="admin-item">
+      {view === 'town' ? (
+        <>
+          <h3>背景画像（町全体図）</h3>
+          <div className="admin-item">
             <div className="admin-item-row">
-              <label>名前
-                <input value={f.name} onChange={(e) => updateFacility(i, { name: e.target.value })} />
-              </label>
-              <label>説明
-                <input value={f.description} onChange={(e) => updateFacility(i, { description: e.target.value })} />
+              <input
+                type="text"
+                value={mapBackground}
+                onChange={(e) => setMapBackground(e.target.value)}
+                placeholder="画像URL"
+              />
+              <label className="admin-file">
+                アップロード
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handleUpload(f)
+                  }}
+                />
               </label>
             </div>
-            <div className="admin-item-row">
-              <label>X座標
-                <input type="number" value={Math.round(f.x)} onChange={(e) => updateFacility(i, { x: Number(e.target.value) })} />
-              </label>
-              <label>Y座標
-                <input type="number" value={Math.round(f.y)} onChange={(e) => updateFacility(i, { y: Number(e.target.value) })} />
-              </label>
+            <p className="admin-help">
+              背景画像を設定すると、地図の縦横比が画像に合わせて変わります。未設定の場合はデフォルトの草地（1000×660）です。
+            </p>
+          </div>
+
+          <h3>町全体図（地区マーカー・施設）</h3>
+          <div className="admin-map-wrap">
+            <div className="admin-map">
+              <svg viewBox={`0 0 ${vbW} ${vbH}`} style={{ width: '100%', height: 'auto' }}>
+                {mapBackground ? (
+                  <image
+                    href={resolveImageUrl(mapBackground, imageMap)}
+                    x="0"
+                    y="0"
+                    width={vbW}
+                    height={vbH}
+                    preserveAspectRatio="none"
+                  />
+                ) : (
+                  <rect width={vbW} height={vbH} fill="#e8ead9" />
+                )}
+
+                {districts.map((d) => {
+                  const selected = selectedId === d.id
+                  return (
+                    <g
+                      key={d.id}
+                      className={selected ? 'selected' : ''}
+                      onClick={() => setSelectedId(d.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <rect
+                        x={d.x}
+                        y={d.y}
+                        width={d.w}
+                        height={d.h}
+                        rx="12"
+                        fill="#f7efdd"
+                        stroke={selected ? '#c0392b' : '#c9a86a'}
+                        strokeWidth={selected ? 4 : 2}
+                      />
+                      <text
+                        x={d.x + d.w / 2}
+                        y={d.y + d.h / 2}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize="18"
+                        fill="#5a3a1a"
+                        pointerEvents="none"
+                      >
+                        {d.shortName}
+                      </text>
+                    </g>
+                  )
+                })}
+
+                {facilities.map((f) => (
+                  <g
+                    key={f.id}
+                    onClick={() => setSelectedId(f.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <circle
+                      cx={f.x}
+                      cy={f.y}
+                      r="18"
+                      fill="#8a5a36"
+                      opacity="0.85"
+                      stroke={selectedId === f.id ? '#c0392b' : 'none'}
+                      strokeWidth="3"
+                    />
+                    <text
+                      x={f.x}
+                      y={f.y + 32}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fill="#4a3527"
+                      pointerEvents="none"
+                    >
+                      {f.name}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            <div className="admin-map-side">
+              <p className="admin-help">
+                地区マーカーや施設をクリックして選択 → 座標を編集
+              </p>
+              {(() => {
+                const d = districts.find((x) => x.id === selectedId)
+                const f = facilities.find((x) => x.id === selectedId)
+                if (d) {
+                  const i = districts.findIndex((x) => x.id === d.id)
+                  return (
+                    <div className="admin-item">
+                      <p className="admin-item-title">{d.name}（マーカー）</p>
+                      <label className="admin-slider">
+                        X（{Math.round(d.x)}）
+                        <input type="range" min={0} max={vbW} value={Math.round(d.x)}
+                          onChange={(e) => updateDistrict(i, { x: Number(e.target.value) })} />
+                      </label>
+                      <label className="admin-slider">
+                        Y（{Math.round(d.y)}）
+                        <input type="range" min={0} max={vbH} value={Math.round(d.y)}
+                          onChange={(e) => updateDistrict(i, { y: Number(e.target.value) })} />
+                      </label>
+                      <div className="admin-item-row">
+                        <label>幅
+                          <input type="number" value={d.w} onChange={(e) => updateDistrict(i, { w: Number(e.target.value) })} />
+                        </label>
+                        <label>高さ
+                          <input type="number" value={d.h} onChange={(e) => updateDistrict(i, { h: Number(e.target.value) })} />
+                        </label>
+                      </div>
+                    </div>
+                  )
+                }
+                if (f) {
+                  const i = facilities.findIndex((x) => x.id === f.id)
+                  return (
+                    <div className="admin-item">
+                      <p className="admin-item-title">{f.name}</p>
+                      <label className="admin-slider">
+                        X（{Math.round(f.x)}）
+                        <input type="range" min={0} max={vbW} value={Math.round(f.x)}
+                          onChange={(e) => updateFacility(i, { x: Number(e.target.value) })} />
+                      </label>
+                      <label className="admin-slider">
+                        Y（{Math.round(f.y)}）
+                        <input type="range" min={0} max={vbH} value={Math.round(f.y)}
+                          onChange={(e) => updateFacility(i, { y: Number(e.target.value) })} />
+                      </label>
+                    </div>
+                  )
+                }
+                return null
+              })()}
             </div>
           </div>
-        ))}
-      </div>
 
-      <h3>区画（クリックで選択 → スライダーで移動）</h3>
-      <div className="admin-map-wrap">
-        <div className="admin-map">
-          <svg
-            viewBox={`0 0 ${vbW} ${vbH}`}
-            style={{ width: '100%', height: 'auto', touchAction: 'none' }}
-          >
-            {mapBackground ? (
-              <image href={resolveImageUrl(mapBackground, imageMap)} x="0" y="0" width={vbW} height={vbH} preserveAspectRatio="none" />
-            ) : (
-              <rect width="1000" height="660" fill="#e8ead9" />
-            )}
-            {lots.map((lot) => {
-              const selected = selectedId === lot.id
-              return (
-                <g
-                  key={lot.id}
-                  className={selected ? 'selected' : ''}
-                  onClick={() => setSelectedId(lot.id)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <rect
-                    x={lot.x}
-                    y={lot.y}
-                    width={lot.w}
-                    height={lot.h}
-                    rx="6"
-                    fill={lot.status === 'sold' ? '#d9b98a' : 'url(#admin-hatch)'}
-                    stroke={selected ? '#c0392b' : '#8a5a36'}
-                    strokeWidth={selected ? 3 : 1}
-                  />
-                  <text
-                    x={lot.x + lot.w / 2}
-                    y={lot.y + lot.h / 2}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize="15"
-                    fill="#4a3527"
-                    pointerEvents="none"
-                  >
-                    {lot.number}
-                  </text>
-                </g>
-              )
-            })}
-            {facilities.map((f) => (
-              <g
-                key={f.id}
-                onClick={() => setSelectedId(f.id)}
-                style={{ cursor: 'pointer' }}
-              >
-                <circle cx={f.x} cy={f.y} r="18" fill="#8a5a36" opacity="0.85" />
-                <text
-                  x={f.x}
-                  y={f.y + 32}
-                  textAnchor="middle"
-                  fontSize="12"
-                  fill="#4a3527"
-                  pointerEvents="none"
-                >
-                  {f.name}
-                </text>
-              </g>
+          <h3>施設（アイコン）</h3>
+          <div className="admin-list">
+            {facilities.map((f, i) => (
+              <div key={f.id} className="admin-item">
+                <div className="admin-item-row">
+                  <label>名前
+                    <input value={f.name} onChange={(e) => updateFacility(i, { name: e.target.value })} />
+                  </label>
+                  <label>説明
+                    <input value={f.description} onChange={(e) => updateFacility(i, { description: e.target.value })} />
+                  </label>
+                </div>
+                <div className="admin-item-row">
+                  <label>X座標
+                    <input type="number" value={Math.round(f.x)} onChange={(e) => updateFacility(i, { x: Number(e.target.value) })} />
+                  </label>
+                  <label>Y座標
+                    <input type="number" value={Math.round(f.y)} onChange={(e) => updateFacility(i, { y: Number(e.target.value) })} />
+                  </label>
+                </div>
+              </div>
             ))}
-            <defs>
-              <pattern id="admin-hatch" width="10" height="10" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                <rect width="10" height="10" fill="#e8dcc2" />
-                <line x1="0" y1="0" x2="0" y2="10" stroke="#cdb58c" strokeWidth="3" />
-              </pattern>
-            </defs>
-          </svg>
-        </div>
-        <div className="admin-map-side">
-          <p className="admin-help">区画や施設をクリックして選択 → スライダーまたは座標を入力</p>
-          {(() => {
-            const lot = lots.find((l) => l.id === selectedId)
-            const fac = facilities.find((f) => f.id === selectedId)
-            if (lot) {
-              const i = lots.findIndex((l) => l.id === lot.id)
-              return (
-                <div className="admin-item">
-                  <p className="admin-item-title">第{lot.number}区画</p>
-                  <label className="admin-slider">
-                    X（{Math.round(lot.x)}）
-                    <input
-                      type="range"
-                      min={0}
-                      max={vbW}
-                      value={Math.round(lot.x)}
-                      onChange={(e) => updateLot(i, { x: Number(e.target.value) })}
-                    />
-                  </label>
-                  <label className="admin-slider">
-                    Y（{Math.round(lot.y)}）
-                    <input
-                      type="range"
-                      min={0}
-                      max={vbH}
-                      value={Math.round(lot.y)}
-                      onChange={(e) => updateLot(i, { y: Number(e.target.value) })}
-                    />
-                  </label>
-                  <div className="admin-item-row">
-                    <label>X
-                      <input type="number" value={Math.round(lot.x)} onChange={(e) => updateLot(i, { x: Number(e.target.value) })} />
+          </div>
+        </>
+      ) : activeDistrict ? (
+        <>
+          <h3>{activeDistrict.name} の区画図</h3>
+          <div className="admin-map-wrap">
+            <div className="admin-map">
+              <svg
+                viewBox={`0 0 ${activeDistrict.mapWidth} ${activeDistrict.mapHeight}`}
+                style={{ width: '100%', height: 'auto' }}
+              >
+                <rect
+                  width={activeDistrict.mapWidth}
+                  height={activeDistrict.mapHeight}
+                  fill="#e8ead9"
+                />
+                {lots
+                  .filter((l) => l.districtId === activeDistrict.id)
+                  .map((lot) => {
+                    const selected = selectedId === lot.id
+                    return (
+                      <g
+                        key={lot.id}
+                        className={selected ? 'selected' : ''}
+                        onClick={() => setSelectedId(lot.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <rect
+                          x={lot.x}
+                          y={lot.y}
+                          width={lot.w}
+                          height={lot.h}
+                          rx="6"
+                          fill={lot.status === 'sold' ? '#d9b98a' : 'url(#admin-hatch)'}
+                          stroke={selected ? '#c0392b' : '#8a5a36'}
+                          strokeWidth={selected ? 3 : 1}
+                        />
+                        <text
+                          x={lot.x + lot.w / 2}
+                          y={lot.y + lot.h / 2}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize="22"
+                          fill="#4a3527"
+                          pointerEvents="none"
+                        >
+                          {activeDistrict.lotPrefix ?? ''}{lot.number}
+                        </text>
+                      </g>
+                    )
+                  })}
+                <defs>
+                  <pattern id="admin-hatch" width="10" height="10" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                    <rect width="10" height="10" fill="#e8dcc2" />
+                    <line x1="0" y1="0" x2="0" y2="10" stroke="#cdb58c" strokeWidth="3" />
+                  </pattern>
+                </defs>
+              </svg>
+            </div>
+
+            <div className="admin-map-side">
+              <p className="admin-help">区画をクリックして選択 → 座標を編集</p>
+              {(() => {
+                const lot = lots.find((l) => l.id === selectedId)
+                if (!lot) return null
+                const i = lots.findIndex((l) => l.id === lot.id)
+                return (
+                  <div className="admin-item">
+                    <p className="admin-item-title">
+                      {activeDistrict.lotPrefix ?? ''}{lot.number}区画
+                    </p>
+                    <label className="admin-slider">
+                      X（{Math.round(lot.x)}）
+                      <input type="range" min={0} max={activeDistrict.mapWidth} value={Math.round(lot.x)}
+                        onChange={(e) => updateLot(i, { x: Number(e.target.value) })} />
                     </label>
-                    <label>Y
-                      <input type="number" value={Math.round(lot.y)} onChange={(e) => updateLot(i, { y: Number(e.target.value) })} />
+                    <label className="admin-slider">
+                      Y（{Math.round(lot.y)}）
+                      <input type="range" min={0} max={activeDistrict.mapHeight} value={Math.round(lot.y)}
+                        onChange={(e) => updateLot(i, { y: Number(e.target.value) })} />
                     </label>
+                    <div className="admin-item-row">
+                      <label>X
+                        <input type="number" value={Math.round(lot.x)} onChange={(e) => updateLot(i, { x: Number(e.target.value) })} />
+                      </label>
+                      <label>Y
+                        <input type="number" value={Math.round(lot.y)} onChange={(e) => updateLot(i, { y: Number(e.target.value) })} />
+                      </label>
+                    </div>
+                    <div className="admin-item-row">
+                      <label>幅
+                        <input type="number" value={lot.w} onChange={(e) => updateLot(i, { w: Number(e.target.value) })} />
+                      </label>
+                      <label>高さ
+                        <input type="number" value={lot.h} onChange={(e) => updateLot(i, { h: Number(e.target.value) })} />
+                      </label>
+                    </div>
                   </div>
-                  <div className="admin-item-row">
-                    <label>幅
-                      <input type="number" value={lot.w} onChange={(e) => updateLot(i, { w: Number(e.target.value) })} />
-                    </label>
-                    <label>高さ
-                      <input type="number" value={lot.h} onChange={(e) => updateLot(i, { h: Number(e.target.value) })} />
-                    </label>
-                  </div>
-                </div>
-              )
-            }
-            if (fac) {
-              const i = facilities.findIndex((f) => f.id === fac.id)
-              return (
-                <div className="admin-item">
-                  <p className="admin-item-title">{fac.name}</p>
-                  <label className="admin-slider">
-                    X（{Math.round(fac.x)}）
-                    <input
-                      type="range"
-                      min={0}
-                      max={vbW}
-                      value={Math.round(fac.x)}
-                      onChange={(e) => updateFacility(i, { x: Number(e.target.value) })}
-                    />
-                  </label>
-                  <label className="admin-slider">
-                    Y（{Math.round(fac.y)}）
-                    <input
-                      type="range"
-                      min={0}
-                      max={vbH}
-                      value={Math.round(fac.y)}
-                      onChange={(e) => updateFacility(i, { y: Number(e.target.value) })}
-                    />
-                  </label>
-                  <div className="admin-item-row">
-                    <label>X
-                      <input type="number" value={Math.round(fac.x)} onChange={(e) => updateFacility(i, { x: Number(e.target.value) })} />
-                    </label>
-                    <label>Y
-                      <input type="number" value={Math.round(fac.y)} onChange={(e) => updateFacility(i, { y: Number(e.target.value) })} />
-                    </label>
-                  </div>
-                </div>
-              )
-            }
-            return null
-          })()}
-        </div>
-      </div>
+                )
+              })()}
+            </div>
+          </div>
+        </>
+      ) : null}
+
       <div className="admin-save-row">
         <button className="admin-btn admin-btn-primary" onClick={save}>保存</button>
       </div>
@@ -766,10 +1032,14 @@ function ImageEditor({
       return { ...prev, [key]: arr }
     })
 
-  const fields: { key: 'hero' | 'profile' | 'cafe'; label: string }[] = [
+  const fields: (
+    | { key: 'hero' | 'profile' | 'cafe' | 'managerRed' | 'managerWhite'; label: string }
+  )[] = [
     { key: 'hero', label: 'トップのバナー' },
-    { key: 'profile', label: '店長の写真' },
     { key: 'cafe', label: 'カフェの写真' },
+    { key: 'profile', label: '店長の写真（プロフィール）' },
+    { key: 'managerRed', label: '赤柴店長の写真（トップの紹介）' },
+    { key: 'managerWhite', label: '白柴事務長の写真（トップの紹介）' },
   ]
 
   const galleryFields: {
@@ -859,6 +1129,136 @@ function ImageEditor({
         <button className="admin-btn admin-btn-primary" onClick={() => onSave({ ...draft, images })}>
           保存
         </button>
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- 地区・街区 ---------------- */
+function DistrictEditor({
+  draft,
+  onSave,
+}: {
+  draft: SiteContent
+  onSave: (next: SiteContent) => void
+}) {
+  const [districts, setDistricts] = useState<District[]>(draft.districts)
+
+  const update = (i: number, patch: Partial<District>) =>
+    setDistricts((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)))
+
+  const add = () => {
+    const maxOrder = districts.reduce((m, d) => Math.max(m, d.order), 0)
+    setDistricts((prev) => [
+      ...prev,
+      {
+        id: `d${Date.now().toString(36)}`,
+        name: '新しい地区',
+        shortName: '新地区',
+        kind: 'villa',
+        status: 'coming-soon',
+        summary: '',
+        x: 400,
+        y: 500,
+        w: 200,
+        h: 110,
+        mapWidth: 1000,
+        mapHeight: 660,
+        lotPrefix: '',
+        order: maxOrder + 1,
+      },
+    ])
+  }
+
+  const remove = (i: number) =>
+    setDistricts((prev) => prev.filter((_, idx) => idx !== i))
+
+  const save = () => onSave({ ...draft, districts })
+
+  return (
+    <div className="admin-section">
+      <div className="admin-head">
+        <h2>地区・街区</h2>
+        <button className="admin-btn" onClick={add}>+ 地区を追加</button>
+      </div>
+      <p className="admin-help">
+        別荘地や商店街などを地区・街区単位で管理します。区画番号には「接頭辞」が付きます（例：接頭辞「川」＋番号3 → 川3）。
+        マーカー位置は「地図」タブで調整できます。
+      </p>
+      <div className="admin-list">
+        {districts.map((d, i) => (
+          <div key={d.id} className="admin-item">
+            <div className="admin-item-row">
+              <label>地区名
+                <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} />
+              </label>
+              <label>短縮名（地図用）
+                <input value={d.shortName} onChange={(e) => update(i, { shortName: e.target.value })} />
+              </label>
+              <button className="admin-btn admin-btn-danger" onClick={() => remove(i)}>削除</button>
+            </div>
+            <label>説明
+              <input value={d.summary} onChange={(e) => update(i, { summary: e.target.value })} />
+            </label>
+            <div className="admin-item-row">
+              <label>種別
+                <select
+                  value={d.kind}
+                  onChange={(e) => update(i, { kind: e.target.value as District['kind'] })}
+                >
+                  <option value="villa">別荘地</option>
+                  <option value="shops">商店街</option>
+                  <option value="residence">住宅地</option>
+                  <option value="farm">農園</option>
+                </select>
+              </label>
+              <label>状況
+                <select
+                  value={d.status}
+                  onChange={(e) => update(i, { status: e.target.value as District['status'] })}
+                >
+                  <option value="sold-out">分譲済み</option>
+                  <option value="open">分譲中</option>
+                  <option value="expanding">拡大中</option>
+                  <option value="coming-soon">近日公開</option>
+                </select>
+              </label>
+            </div>
+            <div className="admin-item-row">
+              <label>区画番号の接頭辞
+                <input
+                  value={d.lotPrefix ?? ''}
+                  onChange={(e) => update(i, { lotPrefix: e.target.value })}
+                  placeholder="例：川 / 森 / 丘（空欄は数字のみ）"
+                />
+              </label>
+              <label>表示順
+                <input
+                  type="number"
+                  value={d.order}
+                  onChange={(e) => update(i, { order: Number(e.target.value) })}
+                />
+              </label>
+              <label>図面の幅
+                <input
+                  type="number"
+                  value={d.mapWidth}
+                  onChange={(e) => update(i, { mapWidth: Number(e.target.value) })}
+                />
+              </label>
+              <label>図面の高さ
+                <input
+                  type="number"
+                  value={d.mapHeight}
+                  onChange={(e) => update(i, { mapHeight: Number(e.target.value) })}
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="admin-save-row">
+        <button className="admin-btn admin-btn-primary" onClick={save}>保存</button>
       </div>
     </div>
   )

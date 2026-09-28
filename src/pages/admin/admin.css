@@ -519,3 +519,43 @@
     font-size: 0.75rem;
   }
 }
+
+/* ---- セレクト・チェックボックス・サブセクション ---- */
+.admin-form select,
+.admin-item select {
+  padding: 8px 10px;
+  border: 1px solid #c9beb0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  width: 100%;
+  background: #fff;
+}
+
+.admin-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.admin-check input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.admin-subsection {
+  margin-bottom: 20px;
+  padding-top: 4px;
+  border-top: 1px dashed #d9cfc0;
+}
+
+.admin-subsection h4 {
+  font-size: 0.9rem;
+  color: #4a3b2c;
+  margin: 12px 0 8px;
+}
+
+.admin-nav button.admin-btn {
+  border: 1px solid #c9beb0;
+}
+

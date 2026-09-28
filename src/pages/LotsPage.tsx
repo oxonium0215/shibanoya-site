@@ -1,149 +1,232 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
-import { FireworksIcon, RiverIcon, ForestIcon } from '../components/icons'
+import { lotLabel } from '../data/types'
+import type { District, Lot } from '../data/types'
+import { FireworksIcon, RiverIcon, ForestIcon, ShibaIcon, PinIcon } from '../components/icons'
+import type { ComponentType } from 'react'
+
+/** 地区の種別アイコン */
+const kindIcons: Record<District['kind'], ComponentType<{ size?: number; className?: string }>> = {
+  villa: ShibaIcon,
+  shops: ForestIcon,
+  residence: PinIcon,
+  farm: ForestIcon,
+}
+
+function statusBadge(status: District['status']) {
+  switch (status) {
+    case 'sold-out':
+      return <span className="badge badge-sold">分譲済み</span>
+    case 'open':
+      return <span className="badge badge-available">分譲中</span>
+    case 'expanding':
+      return <span className="badge badge-available">拡大中</span>
+    case 'coming-soon':
+    default:
+      return <span className="badge">近日公開</span>
+  }
+}
+
+function lotBadge(status: Lot['status']) {
+  switch (status) {
+    case 'sold':
+      return <span className="badge badge-sold">完売</span>
+    case 'planned':
+      return <span className="badge">予定</span>
+    case 'available':
+    default:
+      return <span className="badge badge-available">入居者決定</span>
+  }
+}
+
+/** 地区の紹介アイコン（種別に応じた雰囲気づけ） */
+function districtAccentIcon(d: District) {
+  if (d.lotPrefix === '丘') return FireworksIcon
+  if (d.lotPrefix === '川') return RiverIcon
+  if (d.lotPrefix === '森') return ForestIcon
+  return kindIcons[d.kind]
+}
 
 export default function LotsPage() {
+  const { districtId } = useParams()
   const { content } = useContent()
-  const { town, lots, residents } = content
-  const phase1Lots = lots.filter((l) => l.phase === 1)
-  const phase2Lots = lots.filter((l) => l.phase === 2)
-  const residentById = Object.fromEntries(residents.map((r) => [r.id, r]))
+  const { lots, residents, districts } = content
+  const sortedDistricts = [...districts].sort((a, b) => a.order - b.order)
+  const district = districtId ? districts.find((d) => d.id === districtId) : undefined
 
+  /* ---------------- 地区詳細 ---------------- */
+  if (district) {
+    const districtLots = lots.filter((l) => l.districtId === district.id)
+    const phases = Array.from(new Set(districtLots.map((l) => l.phase))).sort(
+      (a, b) => a - b,
+    )
+    const districtResidents = residents.filter(
+      (r) => (r.districtId ?? district.id) === district.id,
+    )
+
+    return (
+      <div>
+        <nav className="breadcrumb" aria-label="パンくず">
+          <Link to="/lots">別荘地分譲</Link>
+          <span aria-hidden="true">›</span>
+          <span>{district.name}</span>
+        </nav>
+        <h1 className="page-title">{district.name}</h1>
+        <p className="page-lead">
+          {district.summary}
+          {districtLots.length > 0 && <>（全{districtLots.length}区画）</>}
+        </p>
+
+        {districtLots.length === 0 ? (
+          <div className="card registry-empty">
+            <p>この地区の区画は、現在準備中です。</p>
+            <p className="registry-empty-sub">公開までしばらくお待ちください。</p>
+          </div>
+        ) : (
+          phases.map((phase) => {
+            const phaseLots = districtLots
+              .filter((l) => l.phase === phase)
+              .sort((a, b) => a.number - b.number)
+            return (
+              <details key={phase} className="lot-phase" open={phase === phases[0]}>
+                <summary>
+                  第{phase}期を見る（{phaseLots.length}区画）
+                </summary>
+                <div className="lot-grid">
+                  {phaseLots.map((lot) => {
+                    const owner = lot.ownerId
+                      ? residents.find((r) => r.id === lot.ownerId)
+                      : undefined
+                    const future = lot.status !== 'sold'
+                    return (
+                      <div
+                        key={lot.id}
+                        className={`card lot-card${future ? ' lot-card-future' : ''}`}
+                      >
+                        <div
+                          className={`lot-swatch${future ? ' lot-swatch-future' : ''}`}
+                          style={future ? undefined : { background: owner?.color ?? '#e8b877' }}
+                          aria-hidden="true"
+                        />
+                        <div className="lot-card-body">
+                          <p className="lot-card-title">
+                            {lotLabel(district, lot)}区画
+                            {lotBadge(lot.status)}
+                          </p>
+                          <p className="lot-card-area">{lot.area} ㎡</p>
+                          {lot.note && <p className="lot-card-note">{lot.note}</p>}
+                          {owner && owner.publish && (
+                            <p className="lot-card-owner">
+                              所有者：{owner.name}（{owner.handle}）
+                              <br />
+                              <span className="lot-card-date">
+                                引き渡し：{lot.acquiredDate}
+                              </span>
+                            </p>
+                          )}
+                          {owner && !owner.publish && (
+                            <p className="lot-card-owner">
+                              入居者決定
+                              <br />
+                              <span className="lot-card-date">
+                                引き渡し：{lot.acquiredDate}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </details>
+            )
+          })
+        )}
+
+        {districtResidents.length > 0 && (
+          <section>
+            <h2 className="section-title">
+              この地区の住人（{districtResidents.length}名）
+            </h2>
+            <div className="resident-grid">
+              {districtResidents.map((r) => (
+                <div key={r.id} className="card resident-card">
+                  <div className="resident-head">
+                    <div
+                      className="resident-dot"
+                      style={{ background: r.color }}
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="resident-name">
+                        {r.publish ? r.name : '入居者決定'}
+                      </p>
+                      <p className="resident-handle">
+                        {r.publish ? r.handle : '（掲載許可待ち）'}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="resident-date">移住：{r.movedInDate}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="page-actions">
+          <Link className="btn" to={`/map/${district.id}`}>
+            地図で区画を見る
+          </Link>
+          <Link className="btn btn-secondary" to="/lots">
+            ← 別荘地の一覧へ
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  /* ---------------- 地区一覧 ---------------- */
   return (
     <div>
       <h1 className="page-title">別荘地分譲のご案内</h1>
       <p className="page-lead">
-        「柴ノ別荘地」は、{town.name}のなかでも特に眺望の良い場所に広がる別荘地です。
-        第1期（10区画）は常連様1,000名突破記念のプレゼント企画で完売いたしました。
-        第2期は常連様2,000名突破記念として、20区画を公開抽選会で分譲いたしました。
+        柴ノ町の別荘地は、地区・街区ごとに少しずつ広がっています。
+        地区を選ぶと、区画の一覧と分譲状況をご覧いただけます。
       </p>
 
-      {/* エリア紹介 */}
       <section>
-        <h2 className="section-title">別荘地のエリア</h2>
-        <div className="area-grid">
-          <div className="card area-card">
-            <div className="area-photo">
-              <FireworksIcon size={36} className="area-icon" aria-hidden="true" />
-            </div>
-            <p className="area-name">花火を一望できる人気エリア</p>
-            <p className="area-desc">夏祭りの花火が楽しめる、いちばん人気の高台。</p>
-          </div>
-          <div className="card area-card">
-            <div className="area-photo">
-              <RiverIcon size={36} className="area-icon" aria-hidden="true" />
-            </div>
-            <p className="area-name">川のせせらぎが心地よい川沿いエリア</p>
-            <p className="area-desc">柴ノ川のせせらぎが聞こえる、静かな川沿い。</p>
-          </div>
-          <div className="card area-card">
-            <div className="area-photo">
-              <ForestIcon size={36} className="area-icon" aria-hidden="true" />
-            </div>
-            <p className="area-name">静かな森に包まれた癒しのエリア</p>
-            <p className="area-desc">山側の静かな森。秋の紅葉が楽しめます。</p>
-          </div>
-        </div>
-      </section>
-
-      {/* 第1期 */}
-      <section>
-        <h2 className="section-title">
-          第1期 <span className="badge badge-sold">完売済み</span>
-        </h2>
-        <p className="section-note">
-          常連様1,000名突破を記念して、10区画を特別住民として先着10名様へプレゼント。
-          おかげさまで全区画にオーナー様が決まりました。
-        </p>
-        <div className="lot-grid">
-          {phase1Lots.map((lot) => {
-            const owner = lot.ownerId ? residentById[lot.ownerId] : undefined
+        <h2 className="section-title">地区・街区の一覧</h2>
+        <div className="district-grid">
+          {sortedDistricts.map((d) => {
+            const Icon = districtAccentIcon(d)
+            const count = lots.filter((l) => l.districtId === d.id).length
             return (
-              <div key={lot.id} className="card lot-card">
-                <div
-                  className="lot-swatch"
-                  style={{ background: owner?.color ?? '#e8b877' }}
-                  aria-hidden="true"
-                />
-                <div className="lot-card-body">
-                  <p className="lot-card-title">
-                    第{lot.number}区画
-                    <span className="badge badge-sold">完売</span>
-                  </p>
-                  <p className="lot-card-area">{lot.area} ㎡</p>
-                  {lot.note && <p className="lot-card-note">{lot.note}</p>}
-                  {owner && (
-                    <p className="lot-card-owner">
-                      所有者：{owner.name}（{owner.handle}）
-                      <br />
-                      <span className="lot-card-date">引き渡し：{lot.acquiredDate}</span>
-                    </p>
-                  )}
+              <div key={d.id} className="card district-card">
+                <div className="district-card-head">
+                  <div className="area-photo">
+                    <Icon size={36} className="area-icon" aria-hidden="true" />
+                  </div>
                 </div>
+                <p className="district-card-name">{d.name}</p>
+                <p className="district-card-meta">
+                  {statusBadge(d.status)}
+                  <span className="district-card-count">
+                    {count > 0 ? `全${count}区画` : '区画準備中'}
+                  </span>
+                </p>
+                <p className="district-card-summary">{d.summary}</p>
+                <Link className="btn btn-secondary" to={`/lots/${d.id}`}>
+                  {count > 0 ? '区画を見る' : '詳細を見る'}
+                </Link>
               </div>
             )
           })}
         </div>
       </section>
 
-      {/* 第2期 */}
-      <section>
-        <h2 className="section-title">
-          第2期 <span className="badge badge-available">分譲決定</span>
-        </h2>
-        <p className="section-note">
-          常連様2,000名突破を記念し、第二期「柴ノ別荘地」全20区画をプレゼント。
-          公開抽選会（Instagram LIVE）にて当選者が決定いたしました。
-        </p>
-        <div className="lot-grid">
-          {phase2Lots.map((lot) => (
-            <div key={lot.id} className="card lot-card lot-card-future">
-              <div className="lot-swatch lot-swatch-future" aria-hidden="true" />
-              <div className="lot-card-body">
-                <p className="lot-card-title">
-                  第{lot.number}区画
-                  <span className="badge badge-available">当選者決定</span>
-                </p>
-                <p className="lot-card-area">{lot.area} ㎡</p>
-                <p className="lot-card-note">公開抽選会にて当選者が決定いたしました。</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 住人一覧 */}
-      <section>
-        <h2 className="section-title">柴ノ町の住人（第1期 10名）</h2>
-        <p className="section-note">
-          第1期で分譲された別荘地に、現在10名の柴犬たちが暮らしています。
-        </p>
-        <div className="resident-grid">
-          {residents.map((r) => (
-            <div key={r.id} className="card resident-card">
-              <div className="resident-head">
-                <div
-                  className="resident-dot"
-                  style={{ background: r.color }}
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="resident-name">{r.name}</p>
-                  <p className="resident-handle">{r.handle}</p>
-                </div>
-              </div>
-              <p className="resident-date">移住：{r.movedInDate}</p>
-            </div>
-          ))}
-        </div>
-        <p className="section-note note-sample">
-          ※ 名前・ハンドルはサンプルです。実際の当選者の方のお名前にお書き換えください。
-        </p>
-      </section>
-
       <div className="page-actions">
         <Link className="btn" to="/map">
-          地図で区画を見る
+          地図で見る
         </Link>
         <Link className="btn btn-secondary" to="/registry">
           土地登記簿を閲覧する

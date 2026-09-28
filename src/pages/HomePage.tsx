@@ -13,6 +13,8 @@ import {
   LanternIcon,
   FireflyIcon,
   BridgeIcon,
+  PinIcon,
+  ShibaIcon,
 } from '../components/icons'
 
 const categoryIcons: Record<string, ComponentType<{ size?: number; className?: string }>> = {
@@ -32,10 +34,30 @@ const homeGalleryItems: { label: string; caption: string; icon: ComponentType<{ 
   { label: '柴ノ川と橋', caption: '柴ノ川と橋', icon: BridgeIcon },
 ]
 
+/** トップに表示するお知らせ件数 */
+const NEWS_ON_HOME = 3
+
 export default function HomePage() {
   const { content, imageMap } = useContent()
-  const { town, facilities, news, lots, images } = content
-  const soldCount = lots.filter((l) => l.status === 'sold').length
+  const { town, districts, facilities, news, residents, images } = content
+  const latestNews = news.slice(0, NEWS_ON_HOME)
+
+  const managers = [
+    {
+      key: 'red',
+      title: `${town.cafeManager.color}店長`,
+      bio: town.cafeManager.bio,
+      role: town.cafeManager.role,
+      img: images.managerRed,
+    },
+    {
+      key: 'white',
+      title: `${town.officeManager.color}事務長`,
+      bio: town.officeManager.bio,
+      role: town.officeManager.role,
+      img: images.managerWhite,
+    },
+  ]
 
   return (
     <div>
@@ -65,10 +87,8 @@ export default function HomePage() {
           <br />
           のどかな日々の物語が始まります。
         </p>
-        <p className="mayor-sign">
-          {town.cafeManager.color} {town.cafeManager.name}・{town.cafeManager.role}
-          <br />
-          {town.officeManager.color} {town.officeManager.name}・{town.officeManager.role}
+        <p className="fictional-notice">
+          {town.name}は、純喫茶 柴乃屋の物語から生まれた架空の町です。
         </p>
         <p className="mayor-cta">
           <Link className="btn" to="/cafe">
@@ -77,6 +97,14 @@ export default function HomePage() {
           <Link className="btn btn-secondary" to="/map">
             町の地図
           </Link>
+          <a
+            className="btn btn-secondary btn-instagram"
+            href={town.instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            柴ノ町の日々を Instagram で見る {town.instagramHandle}
+          </a>
         </p>
       </section>
 
@@ -98,27 +126,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 町の数字 — 控えめな統計 */}
+      {/* 店主と事務長 */}
+      <section>
+        <h2 className="section-title">柴乃屋の店主と事務長</h2>
+        <div className="manager-grid">
+          {managers.map((m) => {
+            const img = resolveImageUrl(m.img, imageMap)
+            return (
+              <div key={m.key} className="card manager-card">
+                {img ? (
+                  <img className="manager-photo" src={img} alt={m.title} />
+                ) : (
+                  <div className="manager-photo manager-photo-placeholder" aria-hidden="true">
+                    <ShibaIcon size={44} />
+                  </div>
+                )}
+                <p className="manager-name">{m.title}</p>
+                <p className="manager-bio">{m.bio}</p>
+                <p className="manager-role">{m.role}</p>
+              </div>
+            )
+          })}
+        </div>
+        <p className="mayor-cta">
+          <Link className="btn" to="/cafe">
+            純喫茶 柴乃屋へ
+          </Link>
+        </p>
+      </section>
+
+      {/* 町の数字 — データから自動集計（固定値は使わない） */}
       <section className="hero-stats">
         <div className="hero-stat">
-          <span className="hero-stat-value">{town.regulars.toLocaleString()}</span>
-          <span className="hero-stat-label">常連様</span>
+          <span className="hero-stat-value">{residents.length}名</span>
+          <span className="hero-stat-label">柴ノ町の住人</span>
         </div>
         <div className="hero-stat">
-          <span className="hero-stat-value">{town.area}</span>
-          <span className="hero-stat-label">町の面積</span>
+          <span className="hero-stat-value">{districts.length}地区</span>
+          <span className="hero-stat-label">別荘地（順次拡大中）</span>
         </div>
         <div className="hero-stat">
-          <span className="hero-stat-value">{soldCount}区画</span>
-          <span className="hero-stat-label">別荘地 完売</span>
+          <span className="hero-stat-value">{facilities.length}</span>
+          <span className="hero-stat-label">町の施設</span>
         </div>
       </section>
 
-      {/* お知らせ — 新聞記事欄 */}
+      {/* お知らせ — 最新3件のみ */}
       <section>
         <h2 className="section-title">お知らせ</h2>
         <ul className="news-list">
-          {news.map((n) => (
+          {latestNews.map((n) => (
             <li key={n.title} className="news-item">
               <span className="news-date">{n.date}</span>
               <div>
@@ -129,6 +186,11 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
+        <p className="mayor-cta">
+          <Link className="btn btn-secondary" to="/news">
+            お知らせをすべて見る
+          </Link>
+        </p>
       </section>
 
       {/* フォト・フォールド 2 — 柴ノ町の風景 */}
@@ -187,7 +249,7 @@ export default function HomePage() {
         <h2 className="section-title">町の施設</h2>
         <div className="facility-grid">
           {facilities.map((f) => {
-            const Icon = categoryIcons[f.category]
+            const Icon = categoryIcons[f.category] ?? PinIcon
             return (
               <Link key={f.id} to={f.link ?? '/map'} className="facility-card">
                 <div className="facility-icon">
@@ -203,7 +265,7 @@ export default function HomePage() {
 
       {/* 脚注 */}
       <p className="home-note">
-        ※ {town.name}は、純喫茶 柴乃屋（Instagram：@cafe_shibanoya）の物語の中にある架空の町です。
+        ※ {town.name}は、純喫茶 柴乃屋（Instagram：{town.instagramHandle}）の物語の中にある架空の町です。
       </p>
     </div>
   )
