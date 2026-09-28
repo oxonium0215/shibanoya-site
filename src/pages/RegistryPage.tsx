@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import * as Dialog from '@radix-ui/react-dialog'
 import { useContent } from '../context/ContentContext'
+import { CloseIcon } from '../components/icons'
 import { lotLabel } from '../data/types'
 import type { District, Lot, RegistryEntry, Resident } from '../data/types'
 
@@ -219,28 +221,20 @@ export default function RegistryPage() {
         )}
       </div>
 
-      {/* 詳細モーダル */}
-      {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div
-            className="modal card"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${selected.lotName} 登記簿`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="modal-close"
-              aria-label="閉じる"
-              onClick={() => setSelected(null)}
-            >
-              ✕
-            </button>
-            <h2 className="modal-title">
-              {selected.lotName} 土地登記簿
-              <span className="modal-regno">{selected.registrationNo}</span>
-            </h2>
+      {/* 詳細モーダル（Radix Dialog: フォーカストラップ / Esc / aria 対応） */}
+      <Dialog.Root open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="modal-overlay" />
+          <Dialog.Content className="modal card" aria-describedby={undefined}>
+            {selected && (
+              <>
+                <Dialog.Close className="modal-close" aria-label="閉じる">
+                  <CloseIcon size={16} />
+                </Dialog.Close>
+                <Dialog.Title className="modal-title">
+                  {selected.lotName} 土地登記簿
+                  <span className="modal-regno">{selected.registrationNo}</span>
+                </Dialog.Title>
 
             <h3 className="modal-section">表題部</h3>
             <dl className="modal-list">
@@ -305,9 +299,11 @@ export default function RegistryPage() {
                 この地区の地図を見る
               </Link>
             </div>
-          </div>
-        </div>
-      )}
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }

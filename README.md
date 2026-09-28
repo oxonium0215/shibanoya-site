@@ -87,6 +87,19 @@ npm run dev        # http://localhost:5173
 
 Firebase の設定（`.env`）が無い場合は、サイトはデフォルトコンテンツで表示され、管理画面のログインはできません。
 
+## 開発方針（UI）
+
+- **アイコン**: `@tabler/icons-react` を使用します。**アイコンの自前 SVG 直書きは禁止**です。
+  バレル import は tree-shake が効かず全アイコンを巻き込むため、`src/components/icons.tsx` で
+  個別ファイル（`@tabler/icons-react/dist/esm/icons/*.mjs`）から読み込んで再エクスポートしています。
+  新しいアイコンが必要なときも、同じファイルに追加してください。
+  - 例外: 地図キャンバス（`MapPage` / 管理画面の地図エディタ）は「データ図」であってアイコンではないため SVG で描画します。`public/favicon.svg` はアセットです。
+- **レイアウト**: Tailwind CSS（`src/styles/tailwind.css`）。preflight は既存デザインと衝突するため読み込まず、
+  既存 CSS は `@layer legacy` に置いて Tailwind ユーティリティが上書きできるレイヤー順にしています。
+  デザイントークン（色・フォント）は `@theme` に移植済みなので `bg-paper` `text-ink` `font-display` などが使えます。
+- **対話部品（管理画面・モーダル）**: Radix UI のプリミティブ（Tabs / Checkbox / Dialog）を使用します。
+  見た目は Tailwind クラスで調整し、フォーカストラップやキーボード操作・ARIA はライブラリに任せます。
+
 ## データの場所
 
 - コンテンツ: Firestore の `content/site` ドキュメント

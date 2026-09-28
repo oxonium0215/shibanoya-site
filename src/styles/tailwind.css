@@ -1,0 +1,32 @@
+/* ============================================================================
+   Tailwind CSS（レイアウト・ユーティリティ用途）
+   - 既存のカスタム CSS は legacy レイヤーに置き、ユーティリティが上書きできる
+     ようにレイヤー順を宣言します（legacy が最下位、utilities が最上位）。
+   - preflight（リセット）は既存デザインと衝突するため読み込みません。
+   - デザイントークン（色・フォント）は tokens.css と同じ値を持ち込みます。
+   ============================================================================ */
+
+@layer legacy, theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* クラスを走査する対象 */
+@source '../';
+
+@theme {
+  --color-paper: oklch(92% 0.012 85);
+  --color-paper-2: oklch(89% 0.014 85);
+  --color-paper-3: oklch(85% 0.016 82);
+  --color-rule: oklch(78% 0.014 80);
+  --color-rule-2: oklch(55% 0.012 70);
+  --color-muted: oklch(48% 0.012 70);
+  --color-ink-2: oklch(28% 0.014 60);
+  --color-ink: oklch(20% 0.016 55);
+  --color-accent: oklch(42% 0.06 50);
+  --color-accent-2: oklch(52% 0.05 60);
+  --color-accent-ink: oklch(94% 0.02 85);
+
+  --font-display: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', ui-serif, serif;
+  --font-body: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', ui-sans-serif, system-ui, sans-serif;
+}

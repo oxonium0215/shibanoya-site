@@ -1,6 +1,9 @@
 /* ============================================================================
    管理画面（admin）専用スタイル
+   ※ 既存スタイルは legacy レイヤー（Tailwind のユーティリティが上書き可能）
    ============================================================================ */
+
+@layer legacy {
 
 .admin {
   min-height: 100vh;
@@ -121,37 +124,6 @@
 .admin-saved {
   color: #b7d4a8;
   font-size: 0.85rem;
-}
-
-/* ---- ナビ ---- */
-.admin-nav {
-  display: flex;
-  gap: 2px;
-  background: #efe9e0;
-  padding: 8px 24px 0;
-  border-bottom: 1px solid #d9cfc0;
-  flex-wrap: wrap;
-}
-
-.admin-nav button {
-  padding: 10px 20px;
-  border: 1px solid transparent;
-  border-bottom: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #5c4a38;
-}
-
-.admin-nav button:hover {
-  background: #e6ded2;
-}
-
-.admin-nav button.active {
-  background: #fff;
-  border-color: #d9cfc0;
-  font-weight: 700;
-  color: #3a322b;
 }
 
 /* ---- メイン ---- */
@@ -459,22 +431,6 @@
     font-size: 0.75rem;
   }
 
-  .admin-nav {
-    padding: 8px 12px 0;
-    gap: 2px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-  }
-
-  .admin-nav button {
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
   .admin-main {
     padding: 16px 12px;
   }
@@ -513,14 +469,9 @@
   .admin-item-title {
     font-size: 0.85rem;
   }
-
-  .admin-nav button {
-    padding: 8px 10px;
-    font-size: 0.75rem;
-  }
 }
 
-/* ---- セレクト・チェックボックス・サブセクション ---- */
+/* ---- セレクト・サブセクション ---- */
 .admin-form select,
 .admin-item select {
   padding: 8px 10px;
@@ -529,18 +480,6 @@
   font-family: inherit;
   width: 100%;
   background: #fff;
-}
-
-.admin-check {
-  flex-direction: row !important;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-}
-
-.admin-check input[type='checkbox'] {
-  width: auto;
-  flex-shrink: 0;
 }
 
 .admin-subsection {
@@ -555,7 +494,4 @@
   margin: 12px 0 8px;
 }
 
-.admin-nav button.admin-btn {
-  border: 1px solid #c9beb0;
 }
-

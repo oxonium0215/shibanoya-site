@@ -5,6 +5,9 @@
  */
 @import './tokens.css';
 
+/* 既存のスタイルは legacy レイヤーに置く（Tailwind のユーティリティが上書き可能） */
+@layer legacy {
+
 /* ---------------------------------------------------------------------------
    Base
    --------------------------------------------------------------------------- */
@@ -1262,6 +1265,9 @@ button {
   right: var(--space-sm);
   width: 34px;
   height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: var(--rule-hair) solid var(--color-rule-2);
   background: var(--color-paper);
   color: var(--color-muted);
@@ -1915,4 +1921,5 @@ button {
     align-items: flex-start;
     gap: 2px;
   }
+}
 }

@@ -12,6 +12,9 @@ import {
   signOut,
 } from 'firebase/auth'
 import type { User } from 'firebase/auth'
+import * as Tabs from '@radix-ui/react-tabs'
+import * as Checkbox from '@radix-ui/react-checkbox'
+import { CheckIcon } from '../../components/icons'
 import type { SiteContent } from '../../data/content'
 import type { District, NewsItem, Facility, Lot, Resident } from '../../data/types'
 import { NEWS_CATEGORIES } from '../../data/town'
@@ -157,40 +160,56 @@ export default function AdminPage() {
           <button onClick={handleLogout}>ログアウト</button>
         </div>
       </header>
-      <nav className="admin-nav">
-        {(
-          [
-            ['dashboard', 'ダッシュボード'],
-            ['news', 'お知らせ'],
-            ['town', 'サイト設定'],
-            ['districts', '地区'],
-            ['registry', '住人・登記'],
-            ['map', '地図'],
-            ['images', '画像'],
-          ] as [Tab, string][]
-        ).map(([t, label]) => (
-          <button
-            key={t}
-            className={tab === t ? 'active' : ''}
-            onClick={() => setTab(t)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-      <main className="admin-main">
-        {tab === 'dashboard' && <Dashboard />}
-        {tab === 'news' && <NewsEditor draft={draft} onSave={save} />}
-        {tab === 'town' && <TownEditor draft={draft} onSave={save} />}
-        {tab === 'districts' && <DistrictEditor draft={draft} onSave={save} />}
-        {tab === 'registry' && <RegistryEditor draft={draft} onSave={save} />}
-        {tab === 'map' && (
-          <MapEditor draft={draft} onSave={save} uploadImage={uploadImage} />
-        )}
-        {tab === 'images' && (
-          <ImageEditor draft={draft} onSave={save} uploadImage={uploadImage} />
-        )}
-      </main>
+      <Tabs.Root value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <Tabs.List
+          className="flex gap-0.5 overflow-x-auto border-b border-[#d9cfc0] bg-[#efe9e0] px-3 pt-2 md:px-6"
+          aria-label="管理メニュー"
+        >
+          {(
+            [
+              ['dashboard', 'ダッシュボード'],
+              ['news', 'お知らせ'],
+              ['town', 'サイト設定'],
+              ['districts', '地区'],
+              ['registry', '住人・登記'],
+              ['map', '地図'],
+              ['images', '画像'],
+            ] as [Tab, string][]
+          ).map(([t, label]) => (
+            <Tabs.Trigger
+              key={t}
+              value={t}
+              className="shrink-0 cursor-pointer whitespace-nowrap border border-transparent border-b-0 px-3 py-2 text-sm text-[#5c4a38] hover:bg-[#e6ded2] data-[state=active]:border-[#d9cfc0] data-[state=active]:bg-white data-[state=active]:font-bold data-[state=active]:text-[#3a322b]"
+            >
+              {label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+
+        <main className="admin-main">
+          <Tabs.Content value="dashboard">
+            <Dashboard />
+          </Tabs.Content>
+          <Tabs.Content value="news">
+            <NewsEditor draft={draft} onSave={save} />
+          </Tabs.Content>
+          <Tabs.Content value="town">
+            <TownEditor draft={draft} onSave={save} />
+          </Tabs.Content>
+          <Tabs.Content value="districts">
+            <DistrictEditor draft={draft} onSave={save} />
+          </Tabs.Content>
+          <Tabs.Content value="registry">
+            <RegistryEditor draft={draft} onSave={save} />
+          </Tabs.Content>
+          <Tabs.Content value="map">
+            <MapEditor draft={draft} onSave={save} uploadImage={uploadImage} />
+          </Tabs.Content>
+          <Tabs.Content value="images">
+            <ImageEditor draft={draft} onSave={save} uploadImage={uploadImage} />
+          </Tabs.Content>
+        </main>
+      </Tabs.Root>
     </div>
   )
 }
@@ -486,12 +505,16 @@ function RegistryEditor({
                   ))}
                 </select>
               </label>
-              <label className="admin-check">
-                <input
-                  type="checkbox"
+              <label className="flex items-center gap-2 text-sm text-[#5c4a38]">
+                <Checkbox.Root
                   checked={r.publish}
-                  onChange={(e) => updateResident(i, { publish: e.target.checked })}
-                />
+                  onCheckedChange={(v) => updateResident(i, { publish: v === true })}
+                  className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center border border-[#c9beb0] bg-white data-[state=checked]:border-[#4a3b2c] data-[state=checked]:bg-[#4a3b2c]"
+                >
+                  <Checkbox.Indicator>
+                    <CheckIcon size={14} color="#f5f0e6" />
+                  </Checkbox.Indicator>
+                </Checkbox.Root>
                 掲載許可（氏名・Instagram を公開する）
               </label>
             </div>

@@ -13,6 +13,7 @@ import {
   PinIcon,
 } from '../components/icons'
 import type { ComponentType } from 'react'
+import type { IconProps } from '../components/icons'
 
 const categoryColors: Record<string, string> = {
   cafe: '#8a5a36',
@@ -22,7 +23,7 @@ const categoryColors: Record<string, string> = {
   shrine: '#8a5a5a',
 }
 
-const categoryIcons: Record<string, ComponentType<{ size?: number; className?: string }>> = {
+const categoryIcons: Record<string, ComponentType<IconProps>> = {
   cafe: CoffeeIcon,
   yakuba: TownHallIcon,
   station: StationIcon,
@@ -456,21 +457,9 @@ export default function MapPage() {
                   style={f.link ? { cursor: 'pointer' } : undefined}
                 >
                   <circle cx={f.x} cy={f.y} r="22" fill={color} stroke="#f7f0e4" strokeWidth="3" />
-                  <svg
-                    x={f.x - 13}
-                    y={f.y - 13}
-                    width="26"
-                    height="26"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#f7f0e4"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <Icon />
-                  </svg>
+                  <g transform={`translate(${f.x - 13} ${f.y - 13})`} aria-hidden="true">
+                    <Icon size={26} color="#f7f0e4" />
+                  </g>
                   <text
                     x={f.x}
                     y={f.y + 38}
