@@ -8,8 +8,10 @@
 - **ホスティング**: Firebase Hosting（無料プラン）
 - **DB**: Cloud Firestore（コンテンツの保存・公開・画像の保存）
 - **認証**: Firebase Authentication（メール+パスワード）
+- **読み書き**: 公開ページは Firestore **REST** で読み取り、書き込み（管理画面）のみ SDK を使用
 
-管理画面（`/#/admin`）で編集すると、**Firestore に即時保存され、サイト全体にリアルタイム反映**されます。Git やデプロイ作業は不要です。
+管理画面（`/#/admin`）で編集すると Firestore に保存され、公開ページに反映されます（公開ページはタブに戻った際に再取得します）。
+Git やデプロイ作業は不要です。
 
 公開URL: **https://shibanocho-site.web.app**
 
@@ -97,12 +99,14 @@ Firebase の設定（`.env`）が無い場合は、サイトはデフォルト�
 - **レイアウト**: Tailwind CSS（`src/styles/tailwind.css`）。preflight は既存デザインと衝突するため読み込まず、
   既存 CSS は `@layer legacy` に置いて Tailwind ユーティリティが上書きできるレイヤー順にしています。
   デザイントークン（色・フォント）は `@theme` に移植済みなので `bg-paper` `text-ink` `font-display` などが使えます。
+  - ヒーロー／マーキーなど**表現そのものが目的の CSS** は legacy のまま残し、地区カード・絞り込み・店主紹介などの**汎用 UI は Tailwind ユーティリティ**で記述します。
+  - 管理画面の `admin.css` は Tailwind の `@apply`（`@reference` でテーマ参照）で構成し、余白・文字・ブレークポイントを Tailwind スケールに統一しています。
 - **対話部品（管理画面・モーダル）**: Radix UI のプリミティブ（Tabs / Checkbox / Dialog）を使用します。
   見た目は Tailwind クラスで調整し、フォーカストラップやキーボード操作・ARIA はライブラリに任せます。
 
 ## データの場所
 
-- コンテンツ: Firestore の `content/site` ドキュメント
+- コンテンツ: Firestore の `content/site` ドキュメント（公開ページは REST で読み取り）
 - アップロード画像: Firestore の `images` コレクション（dataURL として保存）
 
 ## 注意

@@ -66,7 +66,7 @@ export default function LotsPage() {
 
     return (
       <div>
-        <nav className="breadcrumb" aria-label="パンくず">
+        <nav className="mb-4 flex items-center gap-2 text-xs text-muted" aria-label="パンくず">
           <Link to="/lots">別荘地分譲</Link>
           <span aria-hidden="true">›</span>
           <span>{district.name}</span>
@@ -162,7 +162,7 @@ export default function LotsPage() {
                         {r.publish ? r.name : '入居者決定'}
                       </p>
                       <p className="resident-handle">
-                        {r.publish ? r.handle : '（掲載許可待ち）'}
+                        {r.publish ? r.handle : '非公開'}
                       </p>
                     </div>
                   </div>
@@ -196,26 +196,29 @@ export default function LotsPage() {
 
       <section>
         <h2 className="section-title">地区・街区の一覧</h2>
-        <div className="district-grid">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]">
           {sortedDistricts.map((d) => {
             const Icon = districtAccentIcon(d)
             const count = lots.filter((l) => l.districtId === d.id).length
             return (
-              <div key={d.id} className="card district-card">
-                <div className="district-card-head">
+              <div key={d.id} className="card flex flex-col gap-2 p-4">
+                <div className="-mx-4 -mt-4 mb-3">
                   <div className="area-photo">
                     <Icon size={36} className="area-icon" aria-hidden="true" />
                   </div>
                 </div>
-                <p className="district-card-name">{d.name}</p>
-                <p className="district-card-meta">
+                <p className="font-display text-md font-semibold text-ink">{d.name}</p>
+                <p className="flex flex-wrap items-center gap-3">
                   {statusBadge(d.status)}
-                  <span className="district-card-count">
+                  <span className="text-xs text-muted">
                     {count > 0 ? `全${count}区画` : '区画準備中'}
                   </span>
                 </p>
-                <p className="district-card-summary">{d.summary}</p>
-                <Link className="btn btn-secondary" to={`/lots/${d.id}`}>
+                <p className="mb-2 text-sm text-muted">{d.summary}</p>
+                <Link
+                  className="btn btn-secondary mt-auto self-stretch text-center md:self-start"
+                  to={`/lots/${d.id}`}
+                >
                   {count > 0 ? '区画を見る' : '詳細を見る'}
                 </Link>
               </div>

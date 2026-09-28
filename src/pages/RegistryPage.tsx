@@ -131,10 +131,11 @@ export default function RegistryPage() {
           className="search-input"
         />
 
-        <div className="registry-filters">
-          <label className="filter-field">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))]">
+          <label className="flex flex-col gap-1 text-xs text-muted">
             <span>地区・街区</span>
             <select
+              className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
               value={districtFilter}
               onChange={(e) => setDistrictFilter(e.target.value)}
             >
@@ -147,9 +148,13 @@ export default function RegistryPage() {
             </select>
           </label>
 
-          <label className="filter-field">
+          <label className="flex flex-col gap-1 text-xs text-muted">
             <span>期</span>
-            <select value={phaseFilter} onChange={(e) => setPhaseFilter(e.target.value)}>
+            <select
+              className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
+              value={phaseFilter}
+              onChange={(e) => setPhaseFilter(e.target.value)}
+            >
               <option value={ALL}>{ALL}</option>
               {phases.map((p) => (
                 <option key={p} value={String(p)}>
@@ -159,9 +164,13 @@ export default function RegistryPage() {
             </select>
           </label>
 
-          <label className="filter-field">
+          <label className="flex flex-col gap-1 text-xs text-muted">
             <span>分譲時期</span>
-            <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}>
+            <select
+              className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+            >
               <option value={ALL}>{ALL}</option>
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -271,7 +280,7 @@ export default function RegistryPage() {
                 <dd>
                   {selected.published
                     ? `${selected.ownerName}（${selected.ownerHandle}）`
-                    : '入居者決定（掲載許可待ち）'}
+                    : '非公開'}
                 </dd>
               </div>
               <div>
@@ -291,7 +300,8 @@ export default function RegistryPage() {
             </dl>
 
             <p className="modal-note">
-              ※ 掲載内容は物語上の設定です。所有者情報は、掲載許可をいただいた方のみ表示しています。
+              ※ 掲載内容は物語上の設定です。所有者情報は掲載の許可をいただいた方のみ表示し、
+              それ以外は非公開としています。
             </p>
 
             <div className="page-actions">

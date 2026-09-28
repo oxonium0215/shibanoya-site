@@ -91,7 +91,7 @@ export interface Resident {
   districtId?: string
   /**
    * 掲載許可。true のときのみ氏名・Instagram を公開します。
-   * false の場合は「第〇区画 入居者決定」とのみ表示します。
+   * false の場合は「非公開」と表示します（未回答・非許可を区別しません）。
    */
   publish: boolean
 }

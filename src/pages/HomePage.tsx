@@ -87,7 +87,7 @@ export default function HomePage() {
           <br />
           のどかな日々の物語が始まります。
         </p>
-        <p className="fictional-notice">
+        <p className="mx-auto mb-6 max-w-[60ch] text-sm text-muted">
           {town.name}は、純喫茶 柴乃屋の物語から生まれた架空の町です。
         </p>
         <p className="mayor-cta">
@@ -129,21 +129,30 @@ export default function HomePage() {
       {/* 店主と事務長 */}
       <section>
         <h2 className="section-title">柴乃屋の店主と事務長</h2>
-        <div className="manager-grid">
+        <div className="mx-auto grid max-w-[720px] grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))]">
           {managers.map((m) => {
             const img = resolveImageUrl(m.img, imageMap)
             return (
-              <div key={m.key} className="card manager-card">
+              <div key={m.key} className="card text-center">
                 {img ? (
-                  <img className="manager-photo" src={img} alt={m.title} />
+                  <img
+                    className="mb-4 block aspect-square w-full border border-rule object-cover"
+                    src={img}
+                    alt={m.title}
+                  />
                 ) : (
-                  <div className="manager-photo manager-photo-placeholder" aria-hidden="true">
+                  <div
+                    className="mb-4 flex aspect-square w-full items-center justify-center border border-rule bg-paper-2 text-rule-2"
+                    aria-hidden="true"
+                  >
                     <ShibaIcon size={44} />
                   </div>
                 )}
-                <p className="manager-name">{m.title}</p>
-                <p className="manager-bio">{m.bio}</p>
-                <p className="manager-role">{m.role}</p>
+                <p className="mb-2 font-display text-lg font-semibold text-ink">
+                  {m.title}
+                </p>
+                <p className="mb-2 text-sm text-ink-2">{m.bio}</p>
+                <p className="text-xs text-muted">{m.role}</p>
               </div>
             )
           })}

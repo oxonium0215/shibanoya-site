@@ -168,7 +168,7 @@ export default function MapPage() {
 
     return (
       <div>
-        <nav className="breadcrumb" aria-label="パンくず">
+        <nav className="mb-4 flex items-center gap-2 text-xs text-muted" aria-label="パンくず">
           <Link to="/map">町の地図</Link>
           <span aria-hidden="true">›</span>
           <span>{district.name}</span>
@@ -307,7 +307,7 @@ export default function MapPage() {
                   {selectedOwner && !selectedOwner.publish && (
                     <div>
                       <dt>所有者</dt>
-                      <dd>入居者決定（掲載許可待ち）</dd>
+                      <dd>非公開</dd>
                     </div>
                   )}
                 </dl>
@@ -483,12 +483,15 @@ export default function MapPage() {
         <div className="map-detail">
           <div className="card">
             <p className="lot-detail-title">地区・街区</p>
-            <ul className="district-list">
+            <ul className="mb-3 flex list-none flex-col gap-1">
               {sortedDistricts.map((d) => (
                 <li key={d.id}>
-                  <Link to={`/map/${d.id}`} className="district-list-item">
-                    <span className="district-list-name">{d.name}</span>
-                    <span className="district-list-status">
+                  <Link
+                    to={`/map/${d.id}`}
+                    className="flex min-h-11 flex-col justify-between gap-1 border border-rule px-3 py-2 text-ink no-underline hover:bg-paper-2 md:flex-row md:items-center md:gap-3"
+                  >
+                    <span className="text-sm font-bold">{d.name}</span>
+                    <span className="whitespace-nowrap text-xs text-muted">
                       {districtStatusLabel(d.status)}
                     </span>
                   </Link>

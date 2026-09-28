@@ -1,10 +1,9 @@
-// 公開ページが使う Firebase の軽量セット（Firestore のみ）
-// ※ Firebase Auth は管理画面専用のため lib/firebase-auth.ts に分離しています。
+// 管理画面専用の Firebase セット（Firestore SDK）
+// ※ 公開ページは lib/firestore-rest.ts（REST）で読み取るため SDK を持ちません。
+// ※ Firebase Auth は lib/firebase-auth.ts に分離しています。
 
 import { getFirestore, collection, addDoc } from 'firebase/firestore'
 import { app } from './firebase-app'
-
-export { isFirebaseConfigured } from './firebase-app'
 
 export const db = getFirestore(app)
 

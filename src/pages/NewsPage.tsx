@@ -24,17 +24,24 @@ export default function NewsPage() {
         {town.name}からのお知らせ一覧です。カテゴリーで絞り込めます。
       </p>
 
-      <div className="news-filter" role="group" aria-label="カテゴリーで絞り込む">
-        {[ALL, ...categories].map((c) => (
-          <button
-            key={c}
-            type="button"
-            className={`filter-chip${category === c ? ' active' : ''}`}
-            onClick={() => setCategory(c)}
-          >
-            {c}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="カテゴリーで絞り込む">
+        {[ALL, ...categories].map((c) => {
+          const active = category === c
+          return (
+            <button
+              key={c}
+              type="button"
+              className={`min-h-10 cursor-pointer border px-3.5 py-1.5 text-sm ${
+                active
+                  ? 'border-accent bg-accent text-accent-ink'
+                  : 'border-rule-2 bg-paper text-ink-2 hover:bg-paper-2'
+              }`}
+              onClick={() => setCategory(c)}
+            >
+              {c}
+            </button>
+          )
+        })}
       </div>
       <p className="search-count">{results.length} 件のお知らせ</p>
 
