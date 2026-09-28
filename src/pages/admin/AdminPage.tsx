@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useContent } from '../../context/ContentContext'
 import { resolveImageUrl } from '../../lib/image'
 import {
-  auth,
   isFirebaseConfigured,
   uploadImage as firebaseUpload,
 } from '../../lib/firebase'
+import { auth } from '../../lib/firebase-auth'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,

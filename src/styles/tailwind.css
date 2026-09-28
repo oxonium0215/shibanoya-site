@@ -29,4 +29,21 @@
 
   --font-display: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', ui-serif, serif;
   --font-body: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', ui-sans-serif, system-ui, sans-serif;
+
+  /* ブレークポイント（xs を追加。sm=640 / md=768 / lg=1024 は既定） */
+  --breakpoint-xs: 30rem;
+
+  /* 管理画面のパレット */
+  --color-admin: #4a3b2c;
+  --color-admin-hover: #5c4a38;
+  --color-admin-bg: #f4f1ec;
+  --color-admin-bg-2: #efe9e0;
+  --color-admin-panel: #ffffff;
+  --color-admin-panel-2: #faf7f2;
+  --color-admin-line: #d9cfc0;
+  --color-admin-line-2: #c9beb0;
+  --color-admin-text: #3a322b;
+  --color-admin-sub: #5c4a38;
+  --color-admin-muted: #8a7f72;
+  --color-admin-danger: #b03a2e;
 }

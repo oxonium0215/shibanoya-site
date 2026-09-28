@@ -1,32 +1,12 @@
-// Firebase 初期化
-// 環境変数: VITE_FIREBASE_API_KEY など（.env に設定）
-// 未設定の場合はビルド時ダミー（アプリはデフォルトコンテンツで動作）
+// 公開ページが使う Firebase の軽量セット（Firestore のみ）
+// ※ Firebase Auth は管理画面専用のため lib/firebase-auth.ts に分離しています。
 
-import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
 import { getFirestore, collection, addDoc } from 'firebase/firestore'
+import { app } from './firebase-app'
 
-const env = import.meta.env
+export { isFirebaseConfigured } from './firebase-app'
 
-const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || '',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: env.VITE_FIREBASE_PROJECT_ID || '',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: env.VITE_FIREBASE_APP_ID || '',
-}
-
-const app = initializeApp(firebaseConfig)
-
-export const auth = getAuth(app)
 export const db = getFirestore(app)
-
-/** Firebase が設定済みか */
-export function isFirebaseConfigured(): boolean {
-  return Boolean(
-    firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain,
-  )
-}
 
 /**
  * 画像をブラウザ内で縮小・圧縮し、Firestore の images コレクションに保存する。
