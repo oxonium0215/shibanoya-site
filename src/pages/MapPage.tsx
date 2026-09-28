@@ -311,9 +311,18 @@ export default function MapPage() {
                     </div>
                   )}
                 </dl>
-                <Link className="btn btn-secondary" to="/registry">
-                  登記簿を確認する
-                </Link>
+                {selectedLot.status === 'sold' ? (
+                  <Link
+                    className="btn btn-secondary"
+                    to={`/registry?lot=${encodeURIComponent(selectedLot.id)}`}
+                  >
+                    登記簿を確認する
+                  </Link>
+                ) : (
+                  <p className="map-hint-sub">
+                    この区画は分譲前のため、登記簿にはまだ登録されていません。
+                  </p>
+                )}
               </div>
             ) : (
               <div className="card map-hint">

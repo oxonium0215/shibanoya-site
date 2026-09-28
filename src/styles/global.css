@@ -434,49 +434,6 @@ button {
   margin-bottom: var(--space-xl);
 }
 
-.text-fold .mayor-cta {
-  display: flex;
-  gap: var(--space-sm);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Stats — quiet, ruled, not loud */
-.hero-stats {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-3xl);
-  flex-wrap: wrap;
-  margin: 0 auto var(--space-3xl);
-  padding: var(--space-xl) var(--page-gutter);
-  border-top: var(--rule-hair) solid var(--color-rule);
-  border-bottom: var(--rule-hair) solid var(--color-rule);
-  max-width: var(--page-max);
-}
-
-.hero-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.hero-stat-value {
-  font-family: var(--font-label);
-  font-size: var(--text-2xl);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.05em;
-  color: var(--color-ink);
-}
-
-.hero-stat-label {
-  font-size: var(--text-xs);
-  letter-spacing: 0.2em;
-  text-indent: 0.2em;
-  color: var(--color-muted);
-  margin-top: var(--space-xs);
-}
-
 /* Staff / mayor cards — paired columns, no cards inside cards */
 .staff-card,
 .mayor-card {
@@ -518,10 +475,6 @@ button {
 .mayor-sign {
   font-size: var(--text-sm);
   color: var(--color-muted);
-}
-
-.mayor-cta {
-  margin-top: var(--space-md);
 }
 
 .home-note {
@@ -682,7 +635,8 @@ button {
 .photo-marquee-track {
   display: flex;
   width: max-content;
-  animation: photo-marquee 36s linear infinite;
+  /* 6グループ（-50% = 3グループ分）をゆっくり流す */
+  animation: photo-marquee 100s linear infinite;
 }
 
 .photo-marquee:hover .photo-marquee-track {
@@ -1237,27 +1191,7 @@ button {
   margin-top: var(--space-xs);
 }
 
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-modal);
-  background: oklch(22% 0.035 40 / 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-lg);
-}
-
-.modal {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: var(--space-xl);
-  border-top: 4px solid var(--color-accent);
-}
+/* Modal（見た目は Radix Dialog + Tailwind 側で指定） */
 
 .modal-close {
   position: absolute;
@@ -1433,11 +1367,6 @@ button {
     margin-bottom: var(--space-2xl);
   }
 
-  .hero-stats {
-    gap: var(--space-xl);
-    padding: var(--space-lg) var(--page-gutter);
-  }
-
   .photo-marquee {
     margin-top: var(--space-xl);
   }
@@ -1497,14 +1426,6 @@ button {
     font-size: var(--text-md);
     letter-spacing: 0.25em;
     text-indent: 0.25em;
-  }
-
-  .hero-stats {
-    gap: var(--space-lg);
-  }
-
-  .hero-stat-value {
-    font-size: var(--text-xl);
   }
 
   /* ナビは1行で収める（5項目） */
@@ -1586,15 +1507,6 @@ button {
   .btn {
     padding: 10px 16px;
     font-size: var(--text-xs);
-  }
-
-  .mayor-cta {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .mayor-cta .btn {
-    text-align: center;
   }
 
   .photo-marquee-item {

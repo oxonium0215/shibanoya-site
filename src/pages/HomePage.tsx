@@ -37,9 +37,19 @@ const homeGalleryItems: { label: string; caption: string; icon: ComponentType<{ 
 /** トップに表示するお知らせ件数 */
 const NEWS_ON_HOME = 3
 
+/** フォトロール（マーキー）に流す項目 */
+const MARQUEE_ITEMS = [
+  { icon: <CounterIcon size={40} />, label: 'カウンター' },
+  { icon: <ForestIcon size={40} />, label: '森のエリア' },
+  { icon: <LanternIcon size={40} />, label: '商店街' },
+  { icon: <FireflyIcon size={40} />, label: '蛍' },
+  { icon: <BridgeIcon size={40} />, label: '柴ノ川' },
+  { icon: <CoffeeIcon size={40} />, label: '柴乃屋' },
+]
+
 export default function HomePage() {
   const { content, imageMap } = useContent()
-  const { town, districts, facilities, news, residents, images } = content
+  const { town, facilities, news, images } = content
   const latestNews = news.slice(0, NEWS_ON_HOME)
 
   const managers = [
@@ -90,7 +100,7 @@ export default function HomePage() {
         <p className="mx-auto mb-6 max-w-[60ch] text-sm text-muted">
           {town.name}は、純喫茶 柴乃屋の物語から生まれた架空の町です。
         </p>
-        <p className="mayor-cta">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn" to="/cafe">
             純喫茶 柴乃屋へ
           </Link>
@@ -105,7 +115,7 @@ export default function HomePage() {
           >
             柴ノ町の日々を Instagram で見る {town.instagramHandle}
           </a>
-        </p>
+        </div>
       </section>
 
       {/* 町長あいさつ */}
@@ -157,26 +167,10 @@ export default function HomePage() {
             )
           })}
         </div>
-        <p className="mayor-cta">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn" to="/cafe">
             純喫茶 柴乃屋へ
           </Link>
-        </p>
-      </section>
-
-      {/* 町の数字 — データから自動集計（固定値は使わない） */}
-      <section className="hero-stats">
-        <div className="hero-stat">
-          <span className="hero-stat-value">{residents.length}名</span>
-          <span className="hero-stat-label">柴ノ町の住人</span>
-        </div>
-        <div className="hero-stat">
-          <span className="hero-stat-value">{districts.length}地区</span>
-          <span className="hero-stat-label">別荘地（順次拡大中）</span>
-        </div>
-        <div className="hero-stat">
-          <span className="hero-stat-value">{facilities.length}</span>
-          <span className="hero-stat-label">町の施設</span>
         </div>
       </section>
 
@@ -195,11 +189,11 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
-        <p className="mayor-cta">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn btn-secondary" to="/news">
             お知らせをすべて見る
           </Link>
-        </p>
+        </div>
       </section>
 
       {/* フォト・フォールド 2 — 柴ノ町の風景 */}
@@ -233,16 +227,10 @@ export default function HomePage() {
       {/* フォトロール（マーキー）— 写真が静かに流れる */}
       <section className="photo-marquee" aria-hidden="true">
         <div className="photo-marquee-track">
-          {[0, 1].map((dup) => (
+          {/* 同一内容のグループを偶数個並べ、-50%（=半分）動かして継ぎ目なくループさせる */}
+          {[0, 1, 2, 3, 4, 5].map((dup) => (
             <div className="photo-marquee-group" key={dup}>
-              {[
-                { icon: <CounterIcon size={40} />, label: 'カウンター' },
-                { icon: <ForestIcon size={40} />, label: '森のエリア' },
-                { icon: <LanternIcon size={40} />, label: '商店街' },
-                { icon: <FireflyIcon size={40} />, label: '蛍' },
-                { icon: <BridgeIcon size={40} />, label: '柴ノ川' },
-                { icon: <CoffeeIcon size={40} />, label: '柴乃屋' },
-              ].map((item, i) => (
+              {MARQUEE_ITEMS.map((item, i) => (
                 <div className="photo-marquee-item" key={`${dup}-${i}`}>
                   <div className="photo-placeholder">{item.icon}</div>
                   <span className="photo-marquee-label">{item.label}</span>

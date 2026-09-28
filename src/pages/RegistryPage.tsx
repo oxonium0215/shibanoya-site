@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useContent } from '../context/ContentContext'
 import { CloseIcon } from '../components/icons'
@@ -70,11 +70,27 @@ export default function RegistryPage() {
     [lots, districtById, residentById, town.name],
   )
 
+  // 地図から「登記簿を確認する」で来た場合は、その区画だけを表示する
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [focusLotId, setFocusLotId] = useState<string | null>(
+    searchParams.get('lot'),
+  )
+
   const [query, setQuery] = useState('')
   const [districtFilter, setDistrictFilter] = useState<string>(ALL)
   const [phaseFilter, setPhaseFilter] = useState<string>(ALL)
   const [yearFilter, setYearFilter] = useState<string>(ALL)
   const [selected, setSelected] = useState<RegistryEntry | null>(null)
+
+  /** 区画指定を解除する（絞り込み操作をしたときにも呼ぶ） */
+  const clearFocus = () => {
+    setFocusLotId(null)
+    if (searchParams.has('lot')) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('lot')
+      setSearchParams(next, { replace: true })
+    }
+  }
 
   const phases = Array.from(new Set(registryEntries.map((e) => e.phase))).sort(
     (a, b) => a - b,
@@ -90,8 +106,13 @@ export default function RegistryPage() {
     registryEntries.some((e) => e.districtId === d.id),
   )
 
+  const focusedEntry = focusLotId
+    ? registryEntries.find((e) => e.lotId === focusLotId)
+    : undefined
+
   const q = query.trim().toLowerCase()
   const results = registryEntries.filter((e) => {
+    if (focusLotId && e.lotId !== focusLotId) return false
     if (districtFilter !== ALL && e.districtId !== districtFilter) return false
     if (phaseFilter !== ALL && String(e.phase) !== phaseFilter) return false
     if (yearFilter !== ALL && !e.registeredDate.includes(yearFilter)) return false
@@ -119,6 +140,20 @@ export default function RegistryPage() {
 
       {/* 絞り込み */}
       <div className="registry-search card">
+        {focusedEntry && (
+          <p className="mb-3 flex flex-wrap items-center gap-3 border border-accent bg-paper-2 px-3 py-2 text-sm">
+            <span>
+              {focusedEntry.districtName} {focusedEntry.lotName} の登記を表示しています。
+            </span>
+            <button
+              type="button"
+              className="cursor-pointer border border-rule-2 bg-paper px-3 py-1 text-xs"
+              onClick={clearFocus}
+            >
+              すべての登記を表示
+            </button>
+          </p>
+        )}
         <label className="search-label" htmlFor="registry-query">
           キーワード検索（区画番号・所有者名・ハンドル名・登記番号）
         </label>
@@ -126,7 +161,10 @@ export default function RegistryPage() {
           id="registry-query"
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            clearFocus()
+          }}
           placeholder="例：柴田 もふ子 / @mofuko / 第3区画"
           className="search-input"
         />
@@ -137,7 +175,10 @@ export default function RegistryPage() {
             <select
               className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
               value={districtFilter}
-              onChange={(e) => setDistrictFilter(e.target.value)}
+              onChange={(e) => {
+                setDistrictFilter(e.target.value)
+                clearFocus()
+              }}
             >
               <option value={ALL}>{ALL}</option>
               {usedDistricts.map((d) => (
@@ -153,7 +194,10 @@ export default function RegistryPage() {
             <select
               className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
               value={phaseFilter}
-              onChange={(e) => setPhaseFilter(e.target.value)}
+              onChange={(e) => {
+                setPhaseFilter(e.target.value)
+                clearFocus()
+              }}
             >
               <option value={ALL}>{ALL}</option>
               {phases.map((p) => (
@@ -169,7 +213,10 @@ export default function RegistryPage() {
             <select
               className="min-h-11 w-full border border-rule-2 bg-paper px-2.5 py-2 text-sm text-ink [font-family:inherit]"
               value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
+              onChange={(e) => {
+                setYearFilter(e.target.value)
+                clearFocus()
+              }}
             >
               <option value={ALL}>{ALL}</option>
               {years.map((y) => (
@@ -233,8 +280,11 @@ export default function RegistryPage() {
       {/* 詳細モーダル（Radix Dialog: フォーカストラップ / Esc / aria 対応） */}
       <Dialog.Root open={selected !== null} onOpenChange={(open) => !open && setSelected(null)}>
         <Dialog.Portal>
-          <Dialog.Overlay className="modal-overlay" />
-          <Dialog.Content className="modal card" aria-describedby={undefined}>
+          <Dialog.Overlay className="fixed inset-0 z-[400] bg-[rgba(40,30,22,0.55)]" />
+          <Dialog.Content
+            className="card fixed left-1/2 top-1/2 z-[401] max-h-[90vh] w-[calc(100%-2rem)] max-w-[600px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto border-t-4 border-accent p-10"
+            aria-describedby={undefined}
+          >
             {selected && (
               <>
                 <Dialog.Close className="modal-close" aria-label="閉じる">
